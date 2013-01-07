@@ -466,19 +466,19 @@
         lastCompletedSequenceName = [runningSequence.name copy];
     }
     
-    // Callbacks
-    [delegate completedAnimationSequenceNamed:runningSequence.name];
-    if (block) block(self);
-    
     // Play next sequence
     int nextSeqId = runningSequence.chainedSequenceId;
     runningSequence = NULL;
     
-    if (nextSeqId != -1)
+    // Callbacks
+    [delegate completedAnimationSequenceNamed:lastCompletedSequenceName];
+    if (block) block(self);
+    
+    // Run next sequence if callbacks did not start a new sequence
+    if (runningSequence == NULL && nextSeqId != -1)
     {
         [self runAnimationsForSequenceId:nextSeqId tweenDuration:0];
     }
-    
 }
 
 - (NSString*) runningSequenceName
