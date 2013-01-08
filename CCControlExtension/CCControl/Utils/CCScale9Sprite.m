@@ -64,7 +64,7 @@ enum positions
         if (batchnode)
         {
             [self updateWithBatchNode:batchnode rect:rect rotated:rotated capInsets:capInsets];
-            anchorPoint_        = ccp(0.5f, 0.5f);
+            _anchorPoint        = ccp(0.5f, 0.5f);
         }
         positionsAreDirty_ = YES;
     }
@@ -468,7 +468,7 @@ enum positions
 
 - (void)updatePosition
 {
-    CGSize size             = contentSize_;
+    CGSize size             = _contentSize;
     
     float sizableWidth      = size.width - topLeft.contentSize.width - topRight.contentSize.width;
     float sizableHeight     = size.height - topLeft.contentSize.height - bottomRight.contentSize.height;
@@ -568,7 +568,7 @@ enum positions
 
 - (void)setCapInsets:(CGRect)capInsets
 {
-    CGSize contentSize = contentSize_;
+    CGSize contentSize = _contentSize;
     [self updateWithBatchNode:scale9Image rect:spriteRect rotated:spriteFrameRotated_ capInsets:capInsets];
     [self setContentSize:contentSize];
 }
