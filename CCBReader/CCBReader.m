@@ -680,7 +680,7 @@
         ccbFileName = [NSString stringWithFormat:@"%@.ccbi", ccbFileName];
         
         // Load sub file
-        NSString* path = [[CCFileUtils sharedFileUtils] fullPathFromRelativePath:ccbFileName];
+        NSString* path = [[CCFileUtils sharedFileUtils] fullPathForFilename:ccbFileName];
         NSData* d = [NSData dataWithContentsOfFile:path];
         
         CCBReader* reader = [[[CCBReader alloc] init] autorelease];
@@ -1132,7 +1132,7 @@
     // Add ccbi suffix
     if (![file hasSuffix:@".ccbi"]) file = [file stringByAppendingString:@".ccbi"];
     
-    NSString* path = [[CCFileUtils sharedFileUtils] fullPathFromRelativePath:file];
+    NSString* path = [[CCFileUtils sharedFileUtils] fullPathForFilename:file];
     NSData* d = [NSData dataWithContentsOfFile:path];
     
     return [self nodeGraphFromData:d owner:(id)o parentSize:parentSize];
@@ -1212,7 +1212,7 @@
 #ifdef CCB_ENABLE_UNZIP
 + (BOOL) unzipResources:(NSString*)resPath
 {
-    NSString* fullResPath = [[CCFileUtils sharedFileUtils] fullPathFromRelativePath:resPath];
+    NSString* fullResPath = [[CCFileUtils sharedFileUtils] fullPathForFilename:resPath];
     
     NSString* dstPath = [CCBReader ccbDirectoryPath];
     
