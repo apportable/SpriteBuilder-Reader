@@ -307,8 +307,8 @@
         [_shaderProgram updateUniforms];
         CHECK_GL_ERROR_DEBUG();                
         
-        self.textureLocation    = glGetUniformLocation( _shaderProgram->program_, "u_texture");
-        self.maskLocation       = glGetUniformLocation( _shaderProgram->program_, "u_mask");
+        self.textureLocation    = glGetUniformLocation( _shaderProgram.program, "u_texture");
+        self.maskLocation       = glGetUniformLocation( _shaderProgram.program, "u_mask");
         CHECK_GL_ERROR_DEBUG();
         
         self.contentSize        = [maskTexture_ contentSize];
@@ -324,7 +324,7 @@
     
     ccGLEnableVertexAttribs(kCCVertexAttribFlag_PosColorTex);
     ccGLBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    [_shaderProgram setUniformForModelViewProjectionMatrix];
+    [_shaderProgram setUniformsForBuiltins];
     
     glActiveTexture(GL_TEXTURE0);
     glBindTexture( GL_TEXTURE_2D, [_texture name] );
