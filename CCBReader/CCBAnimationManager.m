@@ -68,7 +68,7 @@
 
 - (void) addNode:(CCNode*)node andSequences:(NSDictionary*)seq
 {
-    [node retain];
+//    [node retain];
     
     NSValue* nodePtr = [NSValue valueWithPointer:node];
     [nodeSequences setObject:seq forKey:nodePtr];
@@ -86,8 +86,8 @@
         [baseValues setObject:baseValue forKey:toNodePtr];
         [baseValues removeObjectForKey:fromNodePtr];
         
-        [fromNode release];
-        [toNode retain];
+//        [fromNode release];
+//        [toNode retain];
     }
     
     // Move keyframes
@@ -97,8 +97,8 @@
         [nodeSequences setObject:seqs forKey:toNodePtr];
         [nodeSequences removeObjectForKey:fromNodePtr];
         
-        [fromNode release];
-        [toNode retain];
+//        [fromNode release];
+//        [toNode retain];
     }
 }
 
@@ -111,7 +111,7 @@
     {
         props = [NSMutableDictionary dictionary];
         [baseValues setObject:props forKey:nodePtr];
-        [node retain];
+//        [node retain];
     }
     
     [props setObject:value forKey:propName];
@@ -494,17 +494,17 @@
 
 - (void) dealloc
 {
-    for (NSValue* nodePtr in nodeSequences)
-    {
-        CCNode* node = [nodePtr pointerValue];
-        [node release];
-    }
-    
-    for (NSValue* nodePtr in baseValues)
-    {
-        CCNode* node = [nodePtr pointerValue];
-        [node release];
-    }
+//    for (NSValue* nodePtr in nodeSequences)
+//    {
+//        CCNode* node = [nodePtr pointerValue];
+//        [node release];
+//    }
+//    
+//    for (NSValue* nodePtr in baseValues)
+//    {
+//        CCNode* node = [nodePtr pointerValue];
+//        [node release];
+//    }
     
     [baseValues release];
     [sequences release];
