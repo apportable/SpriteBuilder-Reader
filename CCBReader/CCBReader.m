@@ -192,11 +192,19 @@
         case kCCBFloatInteger:
             return [self readIntWithSign:YES];
         default: {
-            // using a memcpy since the compiler isn't
-            // doing the float ptr math correctly on device.
+            // Copy the float byte by byte
+            // memcpy dosn't work on latest Xcode (4.6)
             float * pF = (float*)(bytes+currentByte);
             float f = 0;
-            memcpy(&f, pF, sizeof(float));
+            
+            unsigned char* src = (unsigned char*) pF;
+            unsigned char* dst = (unsigned char*) &f;
+            
+            for (int i = 0; i < 4; i++)
+            {
+                dst[i] = src[i];
+            }
+            
             currentByte+=4;
             return f;
         }
