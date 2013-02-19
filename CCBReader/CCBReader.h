@@ -27,7 +27,7 @@
 
 @class CCBAnimationManager;
 
-#define kCCBVersion 4
+#define kCCBVersion 5
 
 enum {
     kCCBPropTypePosition = 0,
@@ -120,6 +120,9 @@ enum
     CCBAnimationManager* actionManager;
     NSMutableDictionary* actionManagers;
     NSMutableSet* animatedProps;
+    
+    // Sound support
+    CCSequence* soundAction;
     
     // For JavaScript bindings
     NSMutableArray* ownerOutletNames;

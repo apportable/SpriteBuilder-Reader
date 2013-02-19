@@ -707,6 +707,8 @@
         reader->ownerCallbackNames = [ownerCallbackNames retain];
         reader->ownerCallbackNodes = [ownerCallbackNodes retain];
         
+        reader.actionManager.owner = owner;
+        
         CCNode* ccbFile = [reader readFileWithCleanUp:NO actionManagers:actionManagers];
         
         if (ccbFile && reader.actionManager.autoPlaySequenceId != -1)
@@ -980,8 +982,77 @@
     return node;
 }
 
+- (BOOL) readCallbackKeyframesForSeq:(CCBSequence*)seq
+{
+    int numKeyframes = [self readIntWithSign:0];
+    
+    if (!numKeyframes) return YES;
+    
+    CCBSequenceProperty* channel = [[[CCBSequenceProperty alloc] init] autorelease];
+    
+    for (int i = 0; i < numKeyframes; i++)
+    {
+        float time = [self readFloat];
+        NSString* callbackName = [self readCachedString];
+        int callbackType = [self readIntWithSign:NO];
+        
+        NSLog(@"callback keyframe %@, %d %f", callbackName, callbackType, time);
+        
+        NSMutableArray* value = [NSMutableArray arrayWithObjects:
+                                 callbackName,
+                                 [NSNumber numberWithInt:callbackType],
+                                 nil];
+        
+        CCBKeyframe* keyframe = [[[CCBKeyframe alloc] init] autorelease];
+        keyframe.time = time;
+        keyframe.value = value;
+    }
+    
+    // Assign to sequence
+    seq.callbackChannel = channel;
+    
+    return YES;
+}
+
+- (BOOL) readSoundKeyframesForSeq:(CCBSequence*)seq
+{
+    int numKeyframes = [self readIntWithSign:0];
+    
+    if (!numKeyframes) return YES;
+    
+    CCBSequenceProperty* channel = [[[CCBSequenceProperty alloc] init] autorelease];
+    
+    for (int i = 0; i < numKeyframes; i++)
+    {
+        float time = [self readFloat];
+        NSString* soundFile = [self readCachedString];
+        float pitch = [self readFloat];
+        float pan = [self readFloat];
+        float gain = [self readFloat];
+        
+        NSMutableArray* value = [NSMutableArray arrayWithObjects:
+                                 soundFile,
+                                 [NSNumber numberWithFloat:pitch],
+                                 [NSNumber numberWithFloat:pan],
+                                 [NSNumber numberWithFloat:gain],
+                                 nil];
+        CCBKeyframe* keyframe = [[[CCBKeyframe alloc] init] autorelease];
+        keyframe.time = time;
+        keyframe.value = value;
+        
+        [channel.keyframes addObject:keyframe];
+    }
+    
+    // Assign to sequence
+    seq.soundChannel = channel;
+    
+    return YES;
+}
+
 - (BOOL) readSequences
 {
+    NSLog(@"readSequences");
+    
     NSMutableArray* sequences = actionManager.sequences;
     
     int numSeqs = [self readIntWithSign:NO];
@@ -993,6 +1064,9 @@
         seq.name = [self readCachedString];
         seq.sequenceId = [self readIntWithSign:NO];
         seq.chainedSequenceId = [self readIntWithSign:YES];
+        
+        if (![self readCallbackKeyframesForSeq:seq]) return NO;
+        if (![self readSoundKeyframesForSeq:seq]) return NO;
         
         [sequences addObject:seq];
     }
@@ -1034,6 +1108,7 @@
     
     // Read JS check
     jsControlled = [self readBool];
+    self.actionManager.jsControlled = jsControlled;
     
     return YES;
 }
@@ -1085,6 +1160,8 @@
 
 - (CCNode*) nodeGraphFromData:(NSData*)d owner:(id)o parentSize:(CGSize) parentSize
 {
+    NSLog(@"nodeGraphFromData");
+    
     // Setup byte array
     data = [d retain];
     bytes = (unsigned char*)[d bytes];
@@ -1094,6 +1171,7 @@
     owner = [o retain];
     
     self.actionManager.rootContainerSize = parentSize;
+    self.actionManager.owner = owner;
     
     ownerOutletNames = [[NSMutableArray alloc] init];
     ownerOutletNodes = [[NSMutableArray alloc] init];
@@ -1131,6 +1209,12 @@
     
     // Call didLoadFromCCB
     [CCBReader callDidLoadFromCCBForNodeGraph:nodeGraph];
+    
+    // Assign sound action
+    if (soundAction)
+    {
+        [nodeGraph runAction:soundAction];
+    }
     
     return nodeGraph;
 }

@@ -28,6 +28,7 @@
 #import "CCBReader.h"
 #import "CCBKeyframe.h"
 #import "CCNode+CCBRelativePositioning.h"
+#import "SimpleAudioEngine.h"
 
 @implementation CCBAnimationManager
 
@@ -35,6 +36,8 @@
 @synthesize autoPlaySequenceId;
 @synthesize rootNode;
 @synthesize rootContainerSize;
+@synthesize owner;
+@synthesize jsControlled;
 @synthesize delegate;
 @synthesize documentOutletNames;
 @synthesize documentOutletNodes;
@@ -395,6 +398,71 @@
     }
 }
 
+- (id) actionForCallbackChannel:(CCBSequenceProperty*) channel
+{
+    float lastKeyframeTime = 0;
+    
+    NSMutableArray* actions = [NSMutableArray array];
+    
+    for (CCBKeyframe* keyframe in channel.keyframes)
+    {
+        float timeSinceLastKeyframe = keyframe.time - lastKeyframeTime;
+        if (timeSinceLastKeyframe > 0)
+        {
+            [actions addObject:[CCDelayTime actionWithDuration:timeSinceLastKeyframe]];
+        }
+        
+        NSString* selectorName = [keyframe.value objectAtIndex:0];
+        int selectorTarget = [[keyframe.value objectAtIndex:1] intValue];
+        
+        if (jsControlled)
+        {
+            // TODO: Add support for JS controlled
+        }
+        else
+        {
+            // Callback through obj-c
+            id target = NULL;
+            if (selectorTarget == kCCBTargetTypeDocumentRoot) target = self.rootNode;
+            else if (selectorTarget == kCCBTargetTypeOwner) target = owner;
+            
+            SEL selector = NSSelectorFromString(selectorName);
+            
+            if (target && selector)
+            {
+                [actions addObject:[CCCallFunc actionWithTarget:target selector:selector]];
+            }
+        }
+    }
+    
+    return [CCSequence actionWithArray:actions];
+}
+
+- (id) actionForSoundChannel:(CCBSequenceProperty*) channel
+{
+    float lastKeyframeTime = 0;
+    
+    NSMutableArray* actions = [NSMutableArray array];
+    
+    for (CCBKeyframe* keyframe in channel.keyframes)
+    {
+        float timeSinceLastKeyframe = keyframe.time - lastKeyframeTime;
+        if (timeSinceLastKeyframe > 0)
+        {
+            [actions addObject:[CCDelayTime actionWithDuration:timeSinceLastKeyframe]];
+        }
+        
+        NSString* soundFile = [keyframe.value objectAtIndex:0];
+        float pitch = [[keyframe.value objectAtIndex:1] floatValue];
+        float pan = [[keyframe.value objectAtIndex:2] floatValue];
+        float gain = [[keyframe.value objectAtIndex:3] floatValue];
+        
+        [actions addObject:[CCBSoundEffect actionWithSoundFile:soundFile pitch:pitch pan:pan gain:gain]];
+    }
+    
+    return [CCSequence actionWithArray:actions];
+}
+
 - (void) runAnimationsForSequenceId:(int)seqId tweenDuration:(float) tweenDuration
 {
     NSAssert(seqId != -1, @"Sequence id %d couldn't be found",seqId);
@@ -441,6 +509,19 @@
     CCBSequence* seq = [self sequenceFromSequenceId:seqId];
     CCAction* completeAction = [CCSequence actionOne:[CCDelayTime actionWithDuration:seq.duration+tweenDuration] two:[CCCallFunc actionWithTarget:self selector:@selector(sequenceCompleted)]];
     [rootNode runAction:completeAction];
+    
+    // Playback callbacks and sounds
+    if (seq.callbackChannel)
+    {
+        // Build sound actions for channel
+        [self.rootNode runAction:[self actionForSoundChannel:seq.callbackChannel]];
+    }
+    
+    if (seq.soundChannel)
+    {
+        // Build sound actions for channel
+        [self.rootNode runAction:[self actionForSoundChannel:seq.soundChannel]];
+    }
     
     // Set the running scene
     runningSequence = [self sequenceFromSequenceId:seqId];
@@ -606,6 +687,39 @@
 
 @end
 
+
+@implementation CCBSoundEffect
+
++(id) actionWithSoundFile:(NSString*)f pitch:(float)pi pan:(float) pa gain:(float)ga
+{
+    return [[[CCBSoundEffect alloc] initWithSoundFile:f pitch:pi pan:pa gain:ga] autorelease];
+}
+
+-(id) initWithSoundFile:(NSString*)file pitch:(float)pi pan:(float) pa gain:(float)ga
+{
+    self = [super init];
+    if (!self) return NULL;
+    
+    soundFile = [file copy];
+    pitch = pi;
+    pan = pa;
+    gain = ga;
+    
+    return self;
+}
+
+- (void) dealloc
+{
+    [soundFile release];
+    [super dealloc];
+}
+
+- (void) update:(ccTime)time
+{
+    [[SimpleAudioEngine sharedEngine] playEffect:soundFile pitch:pitch pan:pan gain:gain];
+}
+
+@end
 
 @implementation CCEaseInstant
 -(void) update: (ccTime) t

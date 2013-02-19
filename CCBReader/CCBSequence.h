@@ -33,11 +33,17 @@
     int sequenceId;
     int chainedSequenceId;
     
+    // Channels
+    CCBSequenceProperty* callbackChannel;
+    CCBSequenceProperty* soundChannel;
 }
 
 @property (nonatomic,assign) float duration;
 @property (nonatomic,copy) NSString* name;
 @property (nonatomic,assign) int sequenceId;
 @property (nonatomic,assign) int chainedSequenceId;
+
+@property (nonatomic,retain) CCBSequenceProperty* callbackChannel;
+@property (nonatomic,retain) CCBSequenceProperty* soundChannel;
 
 @end
