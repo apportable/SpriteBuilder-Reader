@@ -220,6 +220,15 @@
         
         return [CCScaleTo actionWithDuration:duration scaleX:x scaleY:y];
     }
+    else if ([name isEqualToString:@"skew"])
+    {
+        id value = kf1.value;
+        
+        float x = [[value objectAtIndex:0] floatValue];
+        float y = [[value objectAtIndex:1] floatValue];
+        
+        return [CCSkewTo actionWithDuration:duration skewX:x skewY:y];
+    }
     else
     {
         NSLog(@"CCBReader: Failed to create animation for property: %@", name);
@@ -266,6 +275,11 @@
             float y = [[value objectAtIndex:1] floatValue];
             
             [node setRelativeScaleX:x Y:y type:type propertyName:name];
+        }
+        else if ([name isEqualToString:@"skew"])
+        {
+            node.skewX = [[value objectAtIndex:0] floatValue];
+            node.skewY = [[value objectAtIndex:1] floatValue];
         }
         else
         {

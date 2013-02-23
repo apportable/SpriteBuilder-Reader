@@ -335,6 +335,19 @@
             }
         }
     }
+    else if (type == kCCBPropTypeFloatXY)
+    {
+        float xFloat = [self readFloat];
+        float yFloat = [self readFloat];
+        
+        if (setProp)
+        {
+            NSString* nameX = [NSString stringWithFormat:@"%@X",name];
+            NSString* nameY = [NSString stringWithFormat:@"%@Y",name];
+            [node setValue:[NSNumber numberWithFloat:xFloat] forKey:nameX];
+            [node setValue:[NSNumber numberWithFloat:yFloat] forKey:nameY];
+        }
+    }
     else if (type == kCCBPropTypeDegrees
              || type == kCCBPropTypeFloat)
     {
@@ -772,7 +785,8 @@
         value = [NSNumber numberWithFloat:[self readFloat]];
     }
     else if (type == kCCBPropTypeScaleLock
-             || type == kCCBPropTypePosition)
+             || type == kCCBPropTypePosition
+             || type == kCCBPropTypeFloatXY)
     {
         float a = [self readFloat];
         float b = [self readFloat];
