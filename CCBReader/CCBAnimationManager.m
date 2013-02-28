@@ -44,6 +44,7 @@
 @synthesize documentCallbackNames;
 @synthesize documentCallbackNodes;
 @synthesize documentControllerName;
+@synthesize keyframeCallbacks;
 @synthesize lastCompletedSequenceName;
 
 - (id) init
@@ -59,6 +60,9 @@
     documentOutletNodes = [[NSMutableArray alloc] init];
     documentCallbackNames = [[NSMutableArray alloc] init];
     documentCallbackNodes = [[NSMutableArray alloc] init];
+    
+    keyframeCallbacks = [[NSMutableArray alloc] init];
+    keyframeCallFuncs = [[NSMutableDictionary alloc] init];
     
     return self;
 }
@@ -431,7 +435,14 @@
         
         if (jsControlled)
         {
-            // TODO: Add support for JS controlled
+            // Handle JS controlled timelines
+            NSString* callbackName = [NSString stringWithFormat:@"%d:%@", selectorTarget, selectorName];
+            CCCallFunc* callback = [[[keyframeCallFuncs objectForKey:callbackName] copy] autorelease];
+            
+            if (callback)
+            {
+                [actions addObject:callback];
+            }
         }
         else
         {
@@ -614,6 +625,9 @@
     [documentCallbackNodes release];
     
     [lastCompletedSequenceName release];
+    
+    [keyframeCallbacks release];
+    [keyframeCallFuncs release];
     
     [block release];
     

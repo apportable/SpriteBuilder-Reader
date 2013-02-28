@@ -1020,6 +1020,12 @@
         CCBKeyframe* keyframe = [[[CCBKeyframe alloc] init] autorelease];
         keyframe.time = time;
         keyframe.value = value;
+        
+        if (jsControlled)
+        {
+            NSString* callbackIdentifier = [NSString stringWithFormat:@"%d:%@", callbackType, callbackName];
+            [actionManager.keyframeCallbacks addObject:callbackIdentifier];
+        }
     }
     
     // Assign to sequence

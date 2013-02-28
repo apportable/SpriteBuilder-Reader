@@ -59,6 +59,8 @@
     NSMutableArray* documentCallbackNodes;
     NSString* documentControllerName;
     NSString* lastCompletedSequenceName;
+    NSMutableArray* keyframeCallbacks;
+    NSMutableDictionary* keyframeCallFuncs;
     
     void (^block)(id sender);
 }
@@ -70,12 +72,16 @@
 @property (nonatomic,assign) CGSize rootContainerSize;
 @property (nonatomic,retain) NSObject<CCBAnimationManagerDelegate>* delegate;
 @property (nonatomic,readonly) NSString* runningSequenceName;
+@property (nonatomic,readonly) NSString* lastCompletedSequenceName;
+
+// For JS Callbacks
 @property (nonatomic,readonly) NSMutableArray* documentOutletNames;
 @property (nonatomic,readonly) NSMutableArray* documentOutletNodes;
 @property (nonatomic,readonly) NSMutableArray* documentCallbackNames;
 @property (nonatomic,readonly) NSMutableArray* documentCallbackNodes;
 @property (nonatomic,copy) NSString* documentControllerName;
-@property (nonatomic,readonly) NSString* lastCompletedSequenceName;
+@property (nonatomic,readonly) NSMutableArray* keyframeCallbacks;
+- (void) setCallFunc:(CCCallFuncN*)callFunc forJSCallbackNamed:(NSString*) callbackNamed;
 
 - (CGSize) containerSize:(CCNode*)node;
 
