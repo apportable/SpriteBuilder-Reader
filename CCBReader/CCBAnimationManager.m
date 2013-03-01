@@ -418,16 +418,12 @@
 
 - (id) actionForCallbackChannel:(CCBSequenceProperty*) channel
 {
-    NSLog(@"actionForCallbackChannel: %@ numKeyframes: %d", channel, channel.keyframes.count);
-    
     float lastKeyframeTime = 0;
     
     NSMutableArray* actions = [NSMutableArray array];
     
     for (CCBKeyframe* keyframe in channel.keyframes)
     {
-        NSLog(@"keyframe: %@", keyframe);
-        
         float timeSinceLastKeyframe = keyframe.time - lastKeyframeTime;
         if (timeSinceLastKeyframe > 0)
         {
@@ -442,8 +438,6 @@
             // Handle JS controlled timelines
             NSString* callbackName = [NSString stringWithFormat:@"%d:%@", selectorTarget, selectorName];
             CCCallBlockN* callback = [[[keyframeCallFuncs objectForKey:callbackName] copy] autorelease];
-            
-            NSLog(@"js callbackName: %@ callback: %@", callbackName,callback);
             
             if (callback)
             {
@@ -618,7 +612,6 @@
 
 - (void) setCallFunc:(CCCallBlockN *)callFunc forJSCallbackNamed:(NSString *)callbackNamed
 {
-    NSLog(@"setCallFunc: %@ forJSCallbackNamed: %@", callFunc, callbackNamed);
     [keyframeCallFuncs setObject:callFunc forKey:callbackNamed];
 }
 

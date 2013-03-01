@@ -1010,8 +1010,6 @@
         NSString* callbackName = [self readCachedString];
         int callbackType = [self readIntWithSign:NO];
         
-        NSLog(@"callback keyframe %@, %d %f", callbackName, callbackType, time);
-        
         NSMutableArray* value = [NSMutableArray arrayWithObjects:
                                  callbackName,
                                  [NSNumber numberWithInt:callbackType],
@@ -1025,8 +1023,6 @@
         {
             NSString* callbackIdentifier = [NSString stringWithFormat:@"%d:%@", callbackType, callbackName];
             [actionManager.keyframeCallbacks addObject:callbackIdentifier];
-            
-            NSLog(@"add callbackIdentifier: %@ keyframeCallbacks: %@", callbackIdentifier, actionManager.keyframeCallbacks);
         }
         
         [channel.keyframes addObject:keyframe];
@@ -1075,8 +1071,6 @@
 
 - (BOOL) readSequences
 {
-    NSLog(@"readSequences");
-    
     NSMutableArray* sequences = actionManager.sequences;
     
     int numSeqs = [self readIntWithSign:NO];
@@ -1184,8 +1178,6 @@
 
 - (CCNode*) nodeGraphFromData:(NSData*)d owner:(id)o parentSize:(CGSize) parentSize
 {
-    NSLog(@"nodeGraphFromData");
-    
     // Setup byte array
     data = [d retain];
     bytes = (unsigned char*)[d bytes];
