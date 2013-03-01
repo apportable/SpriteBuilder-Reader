@@ -1025,7 +1025,11 @@
         {
             NSString* callbackIdentifier = [NSString stringWithFormat:@"%d:%@", callbackType, callbackName];
             [actionManager.keyframeCallbacks addObject:callbackIdentifier];
+            
+            NSLog(@"add callbackIdentifier: %@ keyframeCallbacks: %@", callbackIdentifier, actionManager.keyframeCallbacks);
         }
+        
+        [channel.keyframes addObject:keyframe];
     }
     
     // Assign to sequence
@@ -1201,7 +1205,7 @@
     NSMutableDictionary* animationManagers = [NSMutableDictionary dictionary];
     CCNode* nodeGraph = [self readFileWithCleanUp:YES actionManagers:animationManagers];
     
-    if (nodeGraph && self.actionManager.autoPlaySequenceId != -1)
+    if (nodeGraph && self.actionManager.autoPlaySequenceId != -1 && !jsControlled)
     {
         // Auto play animations
         [self.actionManager runAnimationsForSequenceId:self.actionManager.autoPlaySequenceId tweenDuration:0];
@@ -1229,13 +1233,7 @@
     
     // Call didLoadFromCCB
     [CCBReader callDidLoadFromCCBForNodeGraph:nodeGraph];
-    
-    // Assign sound action
-    if (soundAction)
-    {
-        [nodeGraph runAction:soundAction];
-    }
-    
+
     return nodeGraph;
 }
 

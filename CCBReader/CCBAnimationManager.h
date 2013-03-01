@@ -81,7 +81,7 @@
 @property (nonatomic,readonly) NSMutableArray* documentCallbackNodes;
 @property (nonatomic,copy) NSString* documentControllerName;
 @property (nonatomic,readonly) NSMutableArray* keyframeCallbacks;
-- (void) setCallFunc:(CCCallFuncN*)callFunc forJSCallbackNamed:(NSString*) callbackNamed;
+- (void) setCallFunc:(CCCallBlockN *)callFunc forJSCallbackNamed:(NSString *)callbackNamed;
 
 - (CGSize) containerSize:(CCNode*)node;
 

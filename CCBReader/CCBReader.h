@@ -122,9 +122,6 @@ enum
     NSMutableDictionary* actionManagers;
     NSMutableSet* animatedProps;
     
-    // Sound support
-    CCSequence* soundAction;
-    
     // For JavaScript bindings
     NSMutableArray* ownerOutletNames;
     NSMutableArray* ownerOutletNodes;

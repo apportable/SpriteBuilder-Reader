@@ -418,12 +418,16 @@
 
 - (id) actionForCallbackChannel:(CCBSequenceProperty*) channel
 {
+    NSLog(@"actionForCallbackChannel: %@ numKeyframes: %d", channel, channel.keyframes.count);
+    
     float lastKeyframeTime = 0;
     
     NSMutableArray* actions = [NSMutableArray array];
     
     for (CCBKeyframe* keyframe in channel.keyframes)
     {
+        NSLog(@"keyframe: %@", keyframe);
+        
         float timeSinceLastKeyframe = keyframe.time - lastKeyframeTime;
         if (timeSinceLastKeyframe > 0)
         {
@@ -437,7 +441,9 @@
         {
             // Handle JS controlled timelines
             NSString* callbackName = [NSString stringWithFormat:@"%d:%@", selectorTarget, selectorName];
-            CCCallFunc* callback = [[[keyframeCallFuncs objectForKey:callbackName] copy] autorelease];
+            CCCallBlockN* callback = [[[keyframeCallFuncs objectForKey:callbackName] copy] autorelease];
+            
+            NSLog(@"js callbackName: %@ callback: %@", callbackName,callback);
             
             if (callback)
             {
@@ -459,6 +465,8 @@
             }
         }
     }
+    
+    if (!actions.count) return NULL;
     
     return [CCSequence actionWithArray:actions];
 }
@@ -484,6 +492,8 @@
         
         [actions addObject:[CCBSoundEffect actionWithSoundFile:soundFile pitch:pitch pan:pan gain:gain]];
     }
+    
+    if (!actions.count) return NULL;
     
     return [CCSequence actionWithArray:actions];
 }
@@ -539,13 +549,21 @@
     if (seq.callbackChannel)
     {
         // Build sound actions for channel
-        [self.rootNode runAction:[self actionForSoundChannel:seq.callbackChannel]];
+        id action = [self actionForCallbackChannel:seq.callbackChannel];
+        if (action)
+        {
+            [self.rootNode runAction:action];
+        }
     }
     
     if (seq.soundChannel)
     {
         // Build sound actions for channel
-        [self.rootNode runAction:[self actionForSoundChannel:seq.soundChannel]];
+        id action = [self actionForSoundChannel:seq.soundChannel];
+        if (action)
+        {
+            [self.rootNode runAction:action];
+        }
     }
     
     // Set the running scene
@@ -596,6 +614,12 @@
 {
     [block release];
     block = [b copy];
+}
+
+- (void) setCallFunc:(CCCallBlockN *)callFunc forJSCallbackNamed:(NSString *)callbackNamed
+{
+    NSLog(@"setCallFunc: %@ forJSCallbackNamed: %@", callFunc, callbackNamed);
+    [keyframeCallFuncs setObject:callFunc forKey:callbackNamed];
 }
 
 - (void) dealloc
