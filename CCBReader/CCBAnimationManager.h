@@ -122,6 +122,12 @@
 -(id) initWithDuration:(ccTime)duration angle:(float)angle;
 @end
 
+@interface CCBRotateXTo : CCBRotateTo
+@end
+
+@interface CCBRotateYTo : CCBRotateTo
+@end
+
 @interface CCBSoundEffect : CCActionInstant
 {
     NSString* soundFile;

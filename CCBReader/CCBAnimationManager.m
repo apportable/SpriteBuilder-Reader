@@ -29,6 +29,7 @@
 #import "CCBKeyframe.h"
 #import "CCNode+CCBRelativePositioning.h"
 #import "SimpleAudioEngine.h"
+#import <objc/runtime.h>
 
 @implementation CCBAnimationManager
 
@@ -160,6 +161,14 @@
     if ([name isEqualToString:@"rotation"])
     {
         return [CCBRotateTo actionWithDuration:duration angle:[kf1.value floatValue]];
+    }
+    else if ([name isEqualToString:@"rotationX"])
+    {
+        return [CCBRotateXTo actionWithDuration:duration angle:[kf1.value floatValue]];
+    }
+    else if ([name isEqualToString:@"rotationY"])
+    {
+        return [CCBRotateYTo actionWithDuration:duration angle:[kf1.value floatValue]];
     }
     else if ([name isEqualToString:@"opacity"])
     {
@@ -699,7 +708,7 @@
 
 +(id) actionWithDuration:(ccTime)duration angle:(float)angle
 {
-    return [[[CCBRotateTo alloc] initWithDuration:duration angle:angle] autorelease];
+    return [[[self alloc] initWithDuration:duration angle:angle] autorelease];
 }
 
 -(id) initWithDuration:(ccTime)duration angle:(float)angle
@@ -728,6 +737,48 @@
 -(void) update: (ccTime) t
 {
 	[self.target setRotation: startAngle_ + diffAngle_ * t];
+}
+
+@end
+
+
+@implementation CCBRotateXTo
+
+-(void) startWithTarget:(CCNode *)aTarget
+{
+    _originalTarget = _target = aTarget;
+    
+    _elapsed = 0.0f;
+	_firstTick = YES;
+    
+    startAngle_ = [self.target rotationX];
+    diffAngle_ = dstAngle_ - startAngle_;
+}
+
+-(void) update: (ccTime) t
+{
+	[self.target setRotationX: startAngle_ + diffAngle_ * t];
+}
+
+@end
+
+
+@implementation CCBRotateYTo
+
+-(void) startWithTarget:(CCNode *)aTarget
+{
+	_originalTarget = _target = aTarget;
+    
+    _elapsed = 0.0f;
+	_firstTick = YES;
+    
+    startAngle_ = [self.target rotationY];
+    diffAngle_ = dstAngle_ - startAngle_;
+}
+
+-(void) update: (ccTime) t
+{
+	[self.target setRotationY: startAngle_ + diffAngle_ * t];
 }
 
 @end
