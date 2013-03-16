@@ -434,6 +434,7 @@
     for (CCBKeyframe* keyframe in channel.keyframes)
     {
         float timeSinceLastKeyframe = keyframe.time - lastKeyframeTime;
+        lastKeyframeTime = keyframe.time;
         if (timeSinceLastKeyframe > 0)
         {
             [actions addObject:[CCDelayTime actionWithDuration:timeSinceLastKeyframe]];
@@ -483,6 +484,7 @@
     for (CCBKeyframe* keyframe in channel.keyframes)
     {
         float timeSinceLastKeyframe = keyframe.time - lastKeyframeTime;
+        lastKeyframeTime = keyframe.time;
         if (timeSinceLastKeyframe > 0)
         {
             [actions addObject:[CCDelayTime actionWithDuration:timeSinceLastKeyframe]];
