@@ -31,6 +31,8 @@
 #import "SimpleAudioEngine.h"
 #import <objc/runtime.h>
 
+static NSInteger ccbAnimationManagerID = 0;
+
 @implementation CCBAnimationManager
 
 @synthesize sequences;
@@ -52,6 +54,9 @@
 {
     self = [super init];
     if (!self) return NULL;
+    
+    animationManagerId = ccbAnimationManagerID;
+    ccbAnimationManagerID++;
     
     sequences = [[NSMutableArray alloc] init];
     nodeSequences = [[NSMutableDictionary alloc] init];
@@ -387,6 +392,16 @@
     }
 }
 
+- (void) removeActionsByTag:(NSInteger)tag fromNode:(CCNode*)node
+{
+    CCActionManager* am = node.actionManager;
+    
+    while ([am getActionByTag:tag target:node])
+    {
+        [am removeActionByTag:tag target:node];
+    }
+}
+
 - (void) runActionsForNode:(CCNode*)node sequenceProperty:(CCBSequenceProperty*)seqProp tweenDuration:(float)tweenDuration
 {
     NSArray* keyframes = [seqProp keyframes];
@@ -421,6 +436,7 @@
         }
         
         CCSequence* seq = [CCSequence actionWithArray:actions];
+        seq.tag = animationManagerId;
         [node runAction:seq];
     }
 }
@@ -507,12 +523,15 @@
 {
     NSAssert(seqId != -1, @"Sequence id %d couldn't be found",seqId);
     
-    [rootNode stopAllActions];
+    // Stop actions associated with this animation manager
+    [self removeActionsByTag:animationManagerId fromNode:rootNode];
     
     for (NSValue* nodePtr in nodeSequences)
     {
         CCNode* node = [nodePtr pointerValue];
-        [node stopAllActions];
+        
+        // Stop actions associated with this animation manager
+        [self removeActionsByTag:animationManagerId fromNode:node];
         
         NSDictionary* seqs = [nodeSequences objectForKey:nodePtr];
         NSDictionary* seqNodeProps = [seqs objectForKey:[NSNumber numberWithInt:seqId]];
@@ -548,15 +567,17 @@
     // Make callback at end of sequence
     CCBSequence* seq = [self sequenceFromSequenceId:seqId];
     CCAction* completeAction = [CCSequence actionOne:[CCDelayTime actionWithDuration:seq.duration+tweenDuration] two:[CCCallFunc actionWithTarget:self selector:@selector(sequenceCompleted)]];
+    completeAction.tag = animationManagerId;
     [rootNode runAction:completeAction];
     
     // Playback callbacks and sounds
     if (seq.callbackChannel)
     {
         // Build sound actions for channel
-        id action = [self actionForCallbackChannel:seq.callbackChannel];
+        CCAction* action = [self actionForCallbackChannel:seq.callbackChannel];
         if (action)
         {
+            action.tag = animationManagerId;
             [self.rootNode runAction:action];
         }
     }
@@ -564,9 +585,10 @@
     if (seq.soundChannel)
     {
         // Build sound actions for channel
-        id action = [self actionForSoundChannel:seq.soundChannel];
+        CCAction* action = [self actionForSoundChannel:seq.soundChannel];
         if (action)
         {
+            action.tag = animationManagerId;
             [self.rootNode runAction:action];
         }
     }

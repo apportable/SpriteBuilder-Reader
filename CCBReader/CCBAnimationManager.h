@@ -44,6 +44,8 @@
     NSMutableDictionary* baseValues;
     int autoPlaySequenceId;
     
+    NSInteger animationManagerId;
+    
     CCNode* rootNode;
     id owner;
     BOOL jsControlled;
