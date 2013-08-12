@@ -21,6 +21,6 @@
 
 + (id)sharedManager;
 
-
+- (NSString*) localizedStringForKey:(NSString*)key;
 
 @end
