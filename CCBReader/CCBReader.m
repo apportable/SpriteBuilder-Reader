@@ -29,6 +29,7 @@
 #import "CCBSequenceProperty.h"
 #import "CCBKeyframe.h"
 #import "CCNode+CCBRelativePositioning.h"
+#import "CCBLocalizationManager.h"
 
 #ifdef CCB_ENABLE_UNZIP
 #import "SSZipArchive.h"
@@ -53,6 +54,37 @@
 @synthesize ownerCallbackNodes;
 @synthesize nodesWithAnimationManagers;
 @synthesize animationManagersForNodes;
+
++ (void) configureCCFileUtils
+{
+    CCFileUtils *sharedFileUtils = [CCFileUtils sharedFileUtils];
+    
+    // Setup file utils for use with SpriteBuilder
+    [sharedFileUtils setEnableFallbackSuffixes:NO];
+    
+    sharedFileUtils.directoriesDict =
+    [[NSMutableDictionary alloc] initWithObjectsAndKeys:
+     @"resources-tablet", kCCFileUtilsiPad,
+     @"resources-tablethd", kCCFileUtilsiPadHD,
+     @"resources-phone", kCCFileUtilsiPhone,
+     @"resources-phonehd", kCCFileUtilsiPhoneHD,
+     @"resources-phone", kCCFileUtilsiPhone5,
+     @"resources-phonehd", kCCFileUtilsiPhone5HD,
+     @"", kCCFileUtilsDefault,
+     nil];
+    
+    sharedFileUtils.searchPath =
+    [NSArray arrayWithObjects:
+     [[[NSBundle mainBundle] resourcePath] stringByAppendingPathComponent:@"Published-iOS"],
+     [[NSBundle mainBundle] resourcePath],
+     nil];
+    
+	sharedFileUtils.enableiPhoneResourcesOniPad = YES;
+    sharedFileUtils.searchMode = kCCFileUtilsSearchDirectoryMode;
+    [sharedFileUtils buildSearchResolutionsOrder];
+    
+    [sharedFileUtils loadFilenameLookupDictionaryFromFile:@"fileLookup.plist"];
+}
 
 - (id) init
 {
@@ -574,6 +606,11 @@
     {
         NSString* txt = [self readCachedString];
         BOOL localized = [self readBool];
+        
+        if (localized)
+        {
+            txt = CCBLocalize(txt);
+        }
         
         if (setProp)
         {

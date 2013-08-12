@@ -144,6 +144,8 @@ enum
 
 + (NSString*) ccbDirectoryPath;
 
++ (void) configureCCFileUtils;
+
 + (CCBReader*) reader;
 
 - (CCNode*) nodeGraphFromFile:(NSString*) file;
