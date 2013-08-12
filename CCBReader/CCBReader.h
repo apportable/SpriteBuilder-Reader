@@ -27,7 +27,7 @@
 
 @class CCBAnimationManager;
 
-#define kCCBVersion 5
+#define kCCBVersion 6
 
 enum {
     kCCBPropTypePosition = 0,

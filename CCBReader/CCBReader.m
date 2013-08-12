@@ -573,6 +573,7 @@
              || type == kCCBPropTypeString)
     {
         NSString* txt = [self readCachedString];
+        BOOL localized = [self readBool];
         
         if (setProp)
         {
