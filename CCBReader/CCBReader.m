@@ -226,19 +226,13 @@
         default: {
             // Copy the float byte by byte
             // memcpy dosn't work on latest Xcode (4.6)
-            float * pF = (float*)(bytes+currentByte);
-            float f = 0;
-            
-            unsigned char* src = (unsigned char*) pF;
-            unsigned char* dst = (unsigned char*) &f;
-            
-            for (int i = 0; i < 4; i++)
-            {
-                dst[i] = src[i];
-            }
-            
-            currentByte+=4;
-            return f;
+            union {
+                float f;
+                int i;
+            } t;
+            t.i = *(int *)(bytes + currentByte);
+            currentByte += 4;
+            return t.f;
         }
     }
 }
@@ -539,6 +533,25 @@
         {
             ccColor3B c = ccc3(r,g,b);
             NSValue* cVal = [NSValue value:&c withObjCType:@encode(ccColor3B)];
+            [node setValue:cVal forKey:name];
+            
+            if ([animatedProps containsObject:name])
+            {
+                [actionManager setBaseValue:cVal forNode:node propertyName:name];
+            }
+        }
+    }
+    else if (type == kCCBPropTypeColor4)
+    {
+        int r = [self readByte];
+        int g = [self readByte];
+        int b = [self readByte];
+        int a = [self readByte];
+        
+        if (setProp)
+        {
+            ccColor4B c = ccc4(r,g,b,a);
+            NSValue* cVal = [NSValue value:&c withObjCType:@encode(ccColor4B)];
             [node setValue:cVal forKey:name];
             
             if ([animatedProps containsObject:name])
@@ -1173,8 +1186,7 @@
 {
     node.userObject = NULL;
     
-    CCNode* child = NULL;
-    CCARRAY_FOREACH(node.children, child)
+    for (CCNode* child in node.children)
     {
         [self cleanUpNodeGraph:child];
     }
@@ -1207,8 +1219,7 @@
         [nodeGraph performSelector:@selector(didLoadFromCCB)];
     }
     
-    CCNode* child = NULL;
-    CCARRAY_FOREACH(nodeGraph.children, child)
+    for (CCNode* child in nodeGraph.children)
     {
         [CCBReader callDidLoadFromCCBForNodeGraph:child];
     }

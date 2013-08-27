@@ -58,6 +58,7 @@ enum {
     kCCBPropTypeBlockCCControl,
     kCCBPropTypeFloatScale,
     kCCBPropTypeFloatXY,
+    kCCBPropTypeColor4,
 };
 
 enum {
