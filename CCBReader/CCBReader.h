@@ -141,7 +141,7 @@ enum
 @property (nonatomic,readonly) NSMutableArray* nodesWithAnimationManagers;
 @property (nonatomic,readonly) NSMutableArray* animationManagersForNodes;
 
-@property (nonatomic,retain) CCBAnimationManager* actionManager;
+@property (nonatomic,strong) CCBAnimationManager* actionManager;
 
 + (NSString*) ccbDirectoryPath;
 

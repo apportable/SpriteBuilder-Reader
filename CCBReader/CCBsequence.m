@@ -41,10 +41,5 @@
     return self;
 }
 
-- (void) dealloc
-{
-    self.name = NULL;
-    [super dealloc];
-}
 
 @end

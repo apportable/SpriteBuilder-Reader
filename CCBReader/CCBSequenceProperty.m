@@ -40,12 +40,5 @@
     return self;
 }
 
-- (void) dealloc
-{
-    [keyframes release];
-    self.name = NULL;
-    
-    [super dealloc];
-}
 
 @end

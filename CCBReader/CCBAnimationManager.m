@@ -83,14 +83,14 @@ static NSInteger ccbAnimationManagerID = 0;
 
 - (void) addNode:(CCNode*)node andSequences:(NSDictionary*)seq
 {
-    NSValue* nodePtr = [NSValue valueWithPointer:node];
+    NSValue* nodePtr = [NSValue valueWithPointer:(__bridge const void *)(node)];
     [nodeSequences setObject:seq forKey:nodePtr];
 }
 
 - (void) moveAnimationsFromNode:(CCNode*)fromNode toNode:(CCNode*)toNode
 {
-    NSValue* fromNodePtr = [NSValue valueWithPointer:fromNode];
-    NSValue* toNodePtr = [NSValue valueWithPointer:toNode];
+    NSValue* fromNodePtr = [NSValue valueWithPointer:(__bridge const void *)(fromNode)];
+    NSValue* toNodePtr = [NSValue valueWithPointer:(__bridge const void *)(toNode)];
     
     // Move base values
     id baseValue = [baseValues objectForKey:fromNodePtr];
@@ -111,7 +111,7 @@ static NSInteger ccbAnimationManagerID = 0;
 
 - (void) setBaseValue:(id)value forNode:(CCNode*)node propertyName:(NSString*)propName
 {
-    NSValue* nodePtr = [NSValue valueWithPointer:node];
+    NSValue* nodePtr = [NSValue valueWithPointer:(__bridge const void *)(node)];
     
     NSMutableDictionary* props = [baseValues objectForKey:nodePtr];
     if (!props)
@@ -125,7 +125,7 @@ static NSInteger ccbAnimationManagerID = 0;
 
 - (id) baseValueForNode:(CCNode*) node propertyName:(NSString*) propName
 {
-    NSValue* nodePtr = [NSValue valueWithPointer:node];
+    NSValue* nodePtr = [NSValue valueWithPointer:(__bridge const void *)(node)];
     
     NSMutableDictionary* props = [baseValues objectForKey:nodePtr];
     return [props objectForKey:propName];
@@ -252,7 +252,7 @@ static NSInteger ccbAnimationManagerID = 0;
     if (tweenDuration > 0)
     {
         // Create a fake keyframe to generate the action from
-        CCBKeyframe* kf1 = [[[CCBKeyframe alloc] init] autorelease];
+        CCBKeyframe* kf1 = [[CCBKeyframe alloc] init];
         kf1.value = value;
         kf1.time = tweenDuration;
         kf1.easingType = kCCBKeyframeEasingLinear;
@@ -456,7 +456,7 @@ static NSInteger ccbAnimationManagerID = 0;
         {
             // Handle JS controlled timelines
             NSString* callbackName = [NSString stringWithFormat:@"%d:%@", selectorTarget, selectorName];
-            CCCallBlockN* callback = [[[keyframeCallFuncs objectForKey:callbackName] copy] autorelease];
+            CCCallBlockN* callback = [[keyframeCallFuncs objectForKey:callbackName] copy];
             
             if (callback)
             {
@@ -606,7 +606,6 @@ static NSInteger ccbAnimationManagerID = 0;
     // Save last completed sequence
     if (lastCompletedSequenceName != runningSequence.name)
     {
-        [lastCompletedSequenceName release];
         lastCompletedSequenceName = [runningSequence.name copy];
     }
     
@@ -632,7 +631,6 @@ static NSInteger ccbAnimationManagerID = 0;
 
 -(void) setCompletedAnimationCallbackBlock:(void(^)(id sender))b
 {
-    [block release];
     block = [b copy];
 }
 
@@ -643,26 +641,12 @@ static NSInteger ccbAnimationManagerID = 0;
 
 - (void) dealloc
 {
-    [baseValues release];
-    [sequences release];
-    [nodeSequences release];
     self.rootNode = NULL;
-    self.delegate = NULL;
-    self.documentControllerName = NULL;
     
-    [documentOutletNames release];
-    [documentOutletNodes release];
-    [documentCallbackNames release];
-    [documentCallbackNodes release];
     
-    [lastCompletedSequenceName release];
     
-    [keyframeCallbacks release];
-    [keyframeCallFuncs release];
     
-    [block release];
     
-    [super dealloc];
 }
 
 - (void) debug
@@ -678,22 +662,17 @@ static NSInteger ccbAnimationManagerID = 0;
 @implementation CCBSetSpriteFrame
 +(id) actionWithSpriteFrame: (CCSpriteFrame*) sf;
 {
-	return [[[self alloc]initWithSpriteFrame:sf]autorelease];
+	return [[self alloc]initWithSpriteFrame:sf];
 }
 
 -(id) initWithSpriteFrame: (CCSpriteFrame*) sf;
 {
 	if( (self=[super init]) )
-		spriteFrame = [sf retain];
+		spriteFrame = sf;
     
 	return self;
 }
 
-- (void) dealloc
-{
-    [spriteFrame release];
-    [super dealloc];
-}
 
 -(id) copyWithZone: (NSZone*) zone
 {
@@ -713,7 +692,7 @@ static NSInteger ccbAnimationManagerID = 0;
 
 +(id) actionWithDuration:(ccTime)duration angle:(float)angle
 {
-    return [[[self alloc] initWithDuration:duration angle:angle] autorelease];
+    return [[self alloc] initWithDuration:duration angle:angle];
 }
 
 -(id) initWithDuration:(ccTime)duration angle:(float)angle
@@ -793,7 +772,7 @@ static NSInteger ccbAnimationManagerID = 0;
 
 +(id) actionWithSoundFile:(NSString*)f pitch:(float)pi pan:(float) pa gain:(float)ga
 {
-    return [[[CCBSoundEffect alloc] initWithSoundFile:f pitch:pi pan:pa gain:ga] autorelease];
+    return [[CCBSoundEffect alloc] initWithSoundFile:f pitch:pi pan:pa gain:ga];
 }
 
 -(id) initWithSoundFile:(NSString*)file pitch:(float)pi pan:(float) pa gain:(float)ga
@@ -809,11 +788,6 @@ static NSInteger ccbAnimationManagerID = 0;
     return self;
 }
 
-- (void) dealloc
-{
-    [soundFile release];
-    [super dealloc];
-}
 
 - (void) update:(ccTime)time
 {

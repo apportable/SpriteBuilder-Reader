@@ -31,7 +31,7 @@
     NSMutableArray* keyframes;
 }
 
-@property (nonatomic,retain) NSString* name;
+@property (nonatomic,strong) NSString* name;
 @property (nonatomic,assign) int type;
 @property (nonatomic,readonly) NSMutableArray* keyframes;
 

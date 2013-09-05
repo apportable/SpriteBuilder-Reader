@@ -32,7 +32,7 @@
     float easingOpt;
 }
 
-@property (nonatomic,retain) id value;
+@property (nonatomic,strong) id value;
 @property (nonatomic,assign) float time;
 @property (nonatomic,assign) int easingType;
 @property (nonatomic,assign) float easingOpt;

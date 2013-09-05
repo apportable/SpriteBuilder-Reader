@@ -63,7 +63,6 @@
     }
     
     // Create dictionary for translations
-    if (_translations) [_translations release];
     _translations = [[NSMutableDictionary alloc] init];
     
     // Load translations
@@ -91,10 +90,5 @@
     return localizedString;
 }
 
-- (void) dealloc
-{
-    [_translations release];
-    [super dealloc];
-}
 
 @end

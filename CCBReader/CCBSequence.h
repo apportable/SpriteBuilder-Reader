@@ -43,7 +43,7 @@
 @property (nonatomic,assign) int sequenceId;
 @property (nonatomic,assign) int chainedSequenceId;
 
-@property (nonatomic,retain) CCBSequenceProperty* callbackChannel;
-@property (nonatomic,retain) CCBSequenceProperty* soundChannel;
+@property (nonatomic,strong) CCBSequenceProperty* callbackChannel;
+@property (nonatomic,strong) CCBSequenceProperty* soundChannel;
 
 @end

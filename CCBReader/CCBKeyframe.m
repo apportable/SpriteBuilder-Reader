@@ -31,10 +31,5 @@
 @synthesize easingType;
 @synthesize easingOpt;
 
-- (void) dealloc
-{
-    self.value = NULL;
-    [super dealloc];
-}
 
 @end

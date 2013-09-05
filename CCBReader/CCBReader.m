@@ -24,6 +24,7 @@
 
 #import "CCBReader.h"
 #import <objc/runtime.h>
+#import <objc/message.h>
 #import "CCBAnimationManager.h"
 #import "CCBSequence.h"
 #import "CCBSequenceProperty.h"
@@ -40,7 +41,7 @@
 {
     CCNode* ccbFile;
 }
-@property (nonatomic,retain) CCNode* ccbFile;
+@property (nonatomic,strong) CCNode* ccbFile;
 @end
 
 
@@ -92,7 +93,7 @@
     if (!self) return NULL;
     
     // Setup action manager
-    self.actionManager = [[[CCBAnimationManager alloc] init] autorelease];
+    self.actionManager = [[CCBAnimationManager alloc] init];
     
     // Setup set of loaded sprite sheets
     loadedSpriteSheets = [[NSMutableSet alloc] init];
@@ -105,19 +106,7 @@
 
 - (void) dealloc
 {
-    [owner release];
     bytes = NULL;
-    [data release];
-    [stringCache release];
-    [loadedSpriteSheets release];
-    [ownerOutletNodes release];
-    [ownerOutletNames release];
-    [ownerCallbackNodes release];
-    [ownerCallbackNames release];
-    [nodesWithAnimationManagers release];
-    [animationManagersForNodes release];
-    self.actionManager = NULL;
-    [super dealloc];
 }
 
 - (unsigned char) readByte
@@ -139,7 +128,7 @@
     
     int numBytes = b0 << 8 | b1;
     
-    NSString* str = [[[NSString alloc] initWithBytes:bytes+currentByte length:numBytes encoding:NSUTF8StringEncoding] autorelease];
+    NSString* str = [[NSString alloc] initWithBytes:bytes+currentByte length:numBytes encoding:NSUTF8StringEncoding];
     
     currentByte += numBytes;
     
@@ -662,11 +651,11 @@
                     if (target)
                     {
                         SEL selector = NSSelectorFromString(selectorName);
-                        __block id t = target;
+                        __unsafe_unretained id t = target;
                         
                         void (^block)(id sender);
                         block = ^(id sender) {
-                            [t performSelector:selector withObject:sender];
+                            objc_msgSend(t, selector, sender);
                         };
                         
                         NSString* setSelectorName = [NSString stringWithFormat:@"set%@:",[name capitalizedString]];
@@ -674,7 +663,7 @@
                         
                         if ([node respondsToSelector:setSelector])
                         {
-                            [node performSelector:setSelector withObject:block];
+                            objc_msgSend(node, setSelector, block);
                         }
                         else
                         {
@@ -712,6 +701,9 @@
         int selectorTarget = [self readIntWithSign:NO];
         int ctrlEvts = [self readIntWithSign:NO];
         
+        NSLog(@"Old CCControl no longer supported: %@ %d %d", selectorName, selectorTarget, ctrlEvts);
+        
+        /*
         if (setProp)
         {
             // Since we do not know for sure that CCControl is available, use
@@ -741,6 +733,7 @@
                 NSLog(@"CCBReader: Failed to add selector/target block for CCControl");
             }
         }
+         */
     }
     else if (type == kCCBPropTypeCCBFile)
     {
@@ -755,21 +748,21 @@
         NSString* path = [[CCFileUtils sharedFileUtils] fullPathForFilename:ccbFileName];
         NSData* d = [NSData dataWithContentsOfFile:path];
         
-        CCBReader* reader = [[[CCBReader alloc] init] autorelease];
+        CCBReader* reader = [[CCBReader alloc] init];
         reader.actionManager.rootContainerSize = parent.contentSize;
         
         // Setup byte array & owner
-        reader->data = [d retain];
+        reader->data = d;
         reader->bytes = (unsigned char*)[d bytes];
         reader->currentByte = 0;
         reader->currentBit = 0;
         
-        reader->owner = [owner retain];
+        reader->owner = owner;
         
-        reader->ownerOutletNames = [ownerOutletNames retain];
-        reader->ownerOutletNodes = [ownerOutletNodes retain];
-        reader->ownerCallbackNames = [ownerCallbackNames retain];
-        reader->ownerCallbackNodes = [ownerCallbackNodes retain];
+        reader->ownerOutletNames = ownerOutletNames;
+        reader->ownerOutletNodes = ownerOutletNodes;
+        reader->ownerCallbackNames = ownerCallbackNames;
+        reader->ownerCallbackNodes = ownerCallbackNodes;
         
         reader.actionManager.owner = owner;
         
@@ -794,7 +787,7 @@
 
 - (CCBKeyframe*) readKeyframeOfType:(int)type
 {
-    CCBKeyframe* keyframe = [[[CCBKeyframe alloc] init] autorelease];
+    CCBKeyframe* keyframe = [[CCBKeyframe alloc] init];
     
     keyframe.time = [self readFloat];
     
@@ -908,7 +901,7 @@
         NSLog(@"CCBReader: Could not create class of type %@",className);
         return NULL;
     }
-    CCNode* node = [[[class alloc] init] autorelease];
+    CCNode* node = [[class alloc] init];
     
     // Set root node
     if (!actionManager.rootNode) actionManager.rootNode = node;
@@ -933,7 +926,7 @@
         
         for (int j = 0; j < numProps; j++)
         {
-            CCBSequenceProperty* seqProp = [[[CCBSequenceProperty alloc] init] autorelease];
+            CCBSequenceProperty* seqProp = [[CCBSequenceProperty alloc] init];
             
             seqProp.name = [self readCachedString];
             seqProp.type = [self readIntWithSign:NO];
@@ -1033,7 +1026,6 @@
         }
     }
     
-    [animatedProps release];
     animatedProps = NULL;
     
     // Read and add children
@@ -1053,7 +1045,7 @@
     
     if (!numKeyframes) return YES;
     
-    CCBSequenceProperty* channel = [[[CCBSequenceProperty alloc] init] autorelease];
+    CCBSequenceProperty* channel = [[CCBSequenceProperty alloc] init];
     
     for (int i = 0; i < numKeyframes; i++)
     {
@@ -1066,7 +1058,7 @@
                                  [NSNumber numberWithInt:callbackType],
                                  nil];
         
-        CCBKeyframe* keyframe = [[[CCBKeyframe alloc] init] autorelease];
+        CCBKeyframe* keyframe = [[CCBKeyframe alloc] init];
         keyframe.time = time;
         keyframe.value = value;
         
@@ -1091,7 +1083,7 @@
     
     if (!numKeyframes) return YES;
     
-    CCBSequenceProperty* channel = [[[CCBSequenceProperty alloc] init] autorelease];
+    CCBSequenceProperty* channel = [[CCBSequenceProperty alloc] init];
     
     for (int i = 0; i < numKeyframes; i++)
     {
@@ -1107,7 +1099,7 @@
                                  [NSNumber numberWithFloat:pan],
                                  [NSNumber numberWithFloat:gain],
                                  nil];
-        CCBKeyframe* keyframe = [[[CCBKeyframe alloc] init] autorelease];
+        CCBKeyframe* keyframe = [[CCBKeyframe alloc] init];
         keyframe.time = time;
         keyframe.value = value;
         
@@ -1128,7 +1120,7 @@
     
     for (int i = 0; i < numSeqs; i++)
     {
-        CCBSequence* seq = [[[CCBSequence alloc] init] autorelease];
+        CCBSequence* seq = [[CCBSequence alloc] init];
         seq.duration = [self readFloat];
         seq.name = [self readCachedString];
         seq.sequenceId = [self readIntWithSign:NO];
@@ -1202,7 +1194,7 @@
     
     CCNode* node = [self readNodeGraphParent:NULL];
     
-    [actionManagers setObject:self.actionManager forKey:[NSValue valueWithPointer:node]];
+    [actionManagers setObject:self.actionManager forKey:[NSValue valueWithPointer:(__bridge const void *)(node)]];
     
     if (cleanUp)
     {
@@ -1228,12 +1220,12 @@
 - (CCNode*) nodeGraphFromData:(NSData*)d owner:(id)o parentSize:(CGSize) parentSize
 {
     // Setup byte array
-    data = [d retain];
+    data = d;
     bytes = (unsigned char*)[d bytes];
     currentByte = 0;
     currentBit = 0;
     
-    owner = [o retain];
+    owner = o;
     
     self.actionManager.rootContainerSize = parentSize;
     self.actionManager.owner = owner;
@@ -1304,12 +1296,11 @@
 	NSMutableArray *array = [[[CCFileUtils sharedFileUtils] searchPath] mutableCopy];
 	[array addObject:searchPath];
 	[[CCFileUtils sharedFileUtils] setSearchPath:array];
-	[array release];
 }
 
 + (CCBReader*) reader
 {
-    return [[[CCBReader alloc] init] autorelease];
+    return [[CCBReader alloc] init];
 }
 
 + (CCNode*) nodeGraphFromFile:(NSString*) file owner:(id)owner

@@ -46,8 +46,8 @@
     
     NSInteger animationManagerId;
     
-    CCNode* rootNode;
-    id owner;
+    CCNode* __unsafe_unretained rootNode;
+    id __unsafe_unretained owner;
     BOOL jsControlled;
     CGSize rootContainerSize;
     
@@ -68,12 +68,12 @@
 }
 @property (nonatomic,readonly) NSMutableArray* sequences;
 @property (nonatomic,assign) int autoPlaySequenceId;
-@property (nonatomic,assign) CCNode* rootNode;
-@property (nonatomic,assign) id owner;
+@property (nonatomic,unsafe_unretained) CCNode* rootNode;
+@property (nonatomic,unsafe_unretained) id owner;
 @property (nonatomic,assign) BOOL jsControlled;
 @property (nonatomic,assign) CGSize rootContainerSize;
-@property (nonatomic,retain) NSObject<CCBAnimationManagerDelegate>* delegate;
-@property (nonatomic,readonly) NSString* runningSequenceName;
+@property (nonatomic,strong) NSObject<CCBAnimationManagerDelegate>* delegate;
+@property (unsafe_unretained, nonatomic,readonly) NSString* runningSequenceName;
 @property (nonatomic,readonly) NSString* lastCompletedSequenceName;
 
 // For JS Callbacks
