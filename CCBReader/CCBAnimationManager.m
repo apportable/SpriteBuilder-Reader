@@ -28,7 +28,6 @@
 #import "CCBSequenceProperty.h"
 #import "CCBReader.h"
 #import "CCBKeyframe.h"
-#import "CCNode+CCBRelativePositioning.h"
 //#import "SimpleAudioEngine.h"
 #import <objc/runtime.h>
 
@@ -198,7 +197,7 @@ static NSInteger ccbAnimationManagerID = 0;
     else if ([name isEqualToString:@"position"])
     {
         // Get position type
-        int type = [[[self baseValueForNode:node propertyName:name] objectAtIndex:2] intValue];
+        //int type = [[[self baseValueForNode:node propertyName:name] objectAtIndex:2] intValue];
         
         id value = kf1.value;
         
@@ -206,16 +205,16 @@ static NSInteger ccbAnimationManagerID = 0;
         float x = [[value objectAtIndex:0] floatValue];
         float y = [[value objectAtIndex:1] floatValue];
         
-        CGSize containerSize = [self containerSize:node.parent];
+        //CGSize containerSize = [self containerSize:node.parent];
         
-        CGPoint absPos = [node absolutePositionFromRelative:ccp(x,y) type:type parentSize:containerSize propertyName:name];
+        //CGPoint absPos = [node absolutePositionFromRelative:ccp(x,y) type:type parentSize:containerSize propertyName:name];
         
-        return [CCMoveTo actionWithDuration:duration position:absPos];
+        return [CCMoveTo actionWithDuration:duration position:ccp(x,y)];
     }
     else if ([name isEqualToString:@"scale"])
     {
         // Get position type
-        int type = [[[self baseValueForNode:node propertyName:name] objectAtIndex:2] intValue];
+        //int type = [[[self baseValueForNode:node propertyName:name] objectAtIndex:2] intValue];
         
         id value = kf1.value;
         
@@ -223,12 +222,13 @@ static NSInteger ccbAnimationManagerID = 0;
         float x = [[value objectAtIndex:0] floatValue];
         float y = [[value objectAtIndex:1] floatValue];
         
+        /*
         if (type == kCCBScaleTypeMultiplyResolution)
         {
             float resolutionScale = [node resolutionScale];
             x *= resolutionScale;
             y *= resolutionScale;
-        }
+        }*/
         
         return [CCScaleTo actionWithDuration:duration scaleX:x scaleY:y];
     }
@@ -269,24 +269,29 @@ static NSInteger ccbAnimationManagerID = 0;
         if ([name isEqualToString:@"position"])
         {
             // Get position type
-            int type = [[[self baseValueForNode:node propertyName:name] objectAtIndex:2] intValue];
+            //int type = [[[self baseValueForNode:node propertyName:name] objectAtIndex:2] intValue];
             
             // Get relative position
             float x = [[value objectAtIndex:0] floatValue];
             float y = [[value objectAtIndex:1] floatValue];
             
-            [node setRelativePosition:ccp(x,y) type:type parentSize:[self containerSize:node.parent] propertyName:name];
+            [node setValue:[NSValue valueWithCGPoint:ccp(x,y)] forKey:name];
+            
+            //[node setRelativePosition:ccp(x,y) type:type parentSize:[self containerSize:node.parent] propertyName:name];
         }
         else if ([name isEqualToString:@"scale"])
         {
             // Get scale type
-            int type = [[[self baseValueForNode:node propertyName:name] objectAtIndex:2] intValue];
+            //int type = [[[self baseValueForNode:node propertyName:name] objectAtIndex:2] intValue];
             
             // Get relative scale
             float x = [[value objectAtIndex:0] floatValue];
             float y = [[value objectAtIndex:1] floatValue];
             
-            [node setRelativeScaleX:x Y:y type:type propertyName:name];
+            [node setValue:[NSNumber numberWithFloat:x] forKey:[name stringByAppendingString:@"X"]];
+            [node setValue:[NSNumber numberWithFloat:y] forKey:[name stringByAppendingString:@"Y"]];
+            
+            //[node setRelativeScaleX:x Y:y type:type propertyName:name];
         }
         else if ([name isEqualToString:@"skew"])
         {
@@ -736,13 +741,13 @@ static NSInteger ccbAnimationManagerID = 0;
     _elapsed = 0.0f;
 	_firstTick = YES;
     
-    startAngle_ = [self.target rotationX];
+    startAngle_ = [self.target rotationalSkewX];
     diffAngle_ = dstAngle_ - startAngle_;
 }
 
 -(void) update: (ccTime) t
 {
-	[self.target setRotationX: startAngle_ + diffAngle_ * t];
+	[self.target setRotationalSkewX: startAngle_ + diffAngle_ * t];
 }
 
 @end
@@ -757,13 +762,13 @@ static NSInteger ccbAnimationManagerID = 0;
     _elapsed = 0.0f;
 	_firstTick = YES;
     
-    startAngle_ = [self.target rotationY];
+    startAngle_ = [self.target rotationalSkewY];
     diffAngle_ = dstAngle_ - startAngle_;
 }
 
 -(void) update: (ccTime) t
 {
-	[self.target setRotationY: startAngle_ + diffAngle_ * t];
+	[self.target setRotationalSkewY: startAngle_ + diffAngle_ * t];
 }
 
 @end

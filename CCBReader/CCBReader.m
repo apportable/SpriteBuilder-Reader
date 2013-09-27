@@ -30,7 +30,6 @@
 #import "CCBSequence.h"
 #import "CCBSequenceProperty.h"
 #import "CCBKeyframe.h"
-#import "CCNode+CCBRelativePositioning.h"
 #import "CCBLocalizationManager.h"
 
 #ifdef CCB_ENABLE_UNZIP
@@ -279,22 +278,26 @@
     {
         float x = [self readFloat];
         float y = [self readFloat];
-        int type = [self readIntWithSign:NO];
-        
-        CGSize containerSize = [actionManager containerSize:parent];
+        int corner = [self readByte];
+        int xUnit = [self readByte];
+        int yUnit = [self readByte];
 
         if (setProp)
         {
-            CGPoint pt = ccp(x,y);
+            [node setValue:[NSValue valueWithCGPoint:ccp(x,y)] forKey:name];
             
-            [node setRelativePosition:pt type:type parentSize:containerSize propertyName:name];
+            CCPositionType type = CCPositionTypeMake(xUnit, yUnit, corner);
+            [node setValue:[NSValue valueWithBytes:&type objCType:@encode(ccColor4B)] forKey:[name stringByAppendingString:@"Type"]];
+            
             
             if ([animatedProps containsObject:name])
             {
                 id baseValue = [NSArray arrayWithObjects:
                                 [NSNumber numberWithFloat:x],
                                 [NSNumber numberWithFloat:y],
-                                [NSNumber numberWithInt:type],
+                                [NSNumber numberWithInt:corner],
+                                [NSNumber numberWithInt:xUnit],
+                                [NSNumber numberWithInt:yUnit],
                                 nil];
                 [actionManager setBaseValue:baseValue forNode:node propertyName:name];
             }
@@ -320,14 +323,16 @@
     {
         float w = [self readFloat];
         float h = [self readFloat];
-        int type = [self readIntWithSign:NO];
-        
-        CGSize containerSize = [actionManager containerSize:parent];
+        int xUnit = [self readByte];
+        int yUnit = [self readByte];
         
         if (setProp)
         {
             CGSize size = CGSizeMake(w, h);
-            [node setRelativeSize:size type:type parentSize:containerSize propertyName:name];
+            [node setValue:[NSValue valueWithCGSize:size] forKey:name];
+            
+            CCContentSizeType sizeType = CCContentSizeTypeMake(xUnit, yUnit);
+            [node setValue:[NSValue valueWithBytes:&sizeType objCType:@encode(CCContentSizeType)] forKey:[name stringByAppendingString:@"Type"]];
         }
     }
     else if (type == kCCBPropTypeScaleLock)
@@ -338,7 +343,12 @@
         
         if (setProp)
         {
-            [node setRelativeScaleX:x Y:y type:type propertyName:name];
+#warning FIX!
+            
+            [node setValue:[NSNumber numberWithFloat:x] forKey:[name stringByAppendingString:@"X"]];
+            [node setValue:[NSNumber numberWithFloat:y] forKey:[name stringByAppendingString:@"Y"]];
+            
+            //[node setRelativeScaleX:x Y:y type:type propertyName:name];
             
             if ([animatedProps containsObject:name])
             {
@@ -387,7 +397,8 @@
         
         if (setProp)
         {
-            [node setRelativeFloat:f type:type propertyName:name];
+            if (type == 1) f *= [CCDirector sharedDirector].positionScaleFactor;
+            [node setValue:[NSNumber numberWithFloat:f] forKey:name];
         }
     }
     else if (type == kCCBPropTypeInteger
@@ -1346,11 +1357,6 @@
 {
     NSArray *searchPaths = NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, YES);
     return [[searchPaths objectAtIndex:0] stringByAppendingPathComponent:@"ccb"];
-}
-
-+ (void) setResolutionScale:(float)scale
-{
-    ccbResolutionScale = scale;
 }
 
 #ifdef CCB_ENABLE_UNZIP
