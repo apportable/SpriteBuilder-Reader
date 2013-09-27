@@ -339,16 +339,13 @@
     {
         float x = [self readFloat];
         float y = [self readFloat];
-        int type = [self readIntWithSign:NO];
+        int type = [self readByte];
         
         if (setProp)
         {
-#warning FIX!
-            
             [node setValue:[NSNumber numberWithFloat:x] forKey:[name stringByAppendingString:@"X"]];
             [node setValue:[NSNumber numberWithFloat:y] forKey:[name stringByAppendingString:@"Y"]];
-            
-            //[node setRelativeScaleX:x Y:y type:type propertyName:name];
+            [node setValue:[NSNumber numberWithInt:type] forKey:[name stringByAppendingString:@"Type"]];
             
             if ([animatedProps containsObject:name])
             {
