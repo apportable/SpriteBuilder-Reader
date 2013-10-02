@@ -1037,6 +1037,33 @@
     
     animatedProps = NULL;
     
+    // Read physics
+    BOOL hasPhysicsBody = [self readBool];
+    if (hasPhysicsBody)
+    {
+        int bodyShape = [self readIntWithSign:NO];
+        float cornerRadius = [self readFloat];
+        
+        int numPoints = [self readIntWithSign:NO];
+        for (int i = 0; i < numPoints; i++)
+        {
+            float x = [self readFloat];
+            float y = [self readFloat];
+            
+            CGPoint pt = ccp(x, y);
+        }
+        
+        BOOL dynamic = [self readBool];
+        BOOL affectedByGravity = [self readBool];
+        BOOL allowsRotation = [self readBool];
+        
+        float density = [self readFloat];
+        float friction = [self readFloat];
+        float elasticity = [self readFloat];
+        
+        NSLog(@"CCBReader Physics shape:%d radius:%f dynamic:%d affectedByGravity:%d allowsRotation:%d density:%f friction:%f elasticity:%f", bodyShape, cornerRadius, dynamic, affectedByGravity, allowsRotation, density, friction, elasticity);
+    }
+    
     // Read and add children
     int numChildren = [self readIntWithSign:NO];
     for (int i = 0; i < numChildren; i++)
