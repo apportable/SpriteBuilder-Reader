@@ -31,6 +31,7 @@
 #import "CCBSequenceProperty.h"
 #import "CCBKeyframe.h"
 #import "CCBLocalizationManager.h"
+#import "CCPhysics.h"
 
 #ifdef CCB_ENABLE_UNZIP
 #import "SSZipArchive.h"
@@ -1041,16 +1042,31 @@
     BOOL hasPhysicsBody = [self readBool];
     if (hasPhysicsBody)
     {
+        // Read body shape
         int bodyShape = [self readIntWithSign:NO];
         float cornerRadius = [self readFloat];
         
+        // Read points
         int numPoints = [self readIntWithSign:NO];
+        CGPoint* points = malloc(sizeof(CGPoint)*numPoints);
         for (int i = 0; i < numPoints; i++)
         {
             float x = [self readFloat];
             float y = [self readFloat];
             
-            CGPoint pt = ccp(x, y);
+            points[i] = ccp(x, y);
+        }
+        
+        // Create body
+        CCPhysicsBody* body = NULL;
+        
+        if (bodyShape == 0)
+        {
+            body = [CCPhysicsBody bodyWithPolygonFromPoints:points count:numPoints cornerRadius:cornerRadius];
+        }
+        else if (bodyShape == 1)
+        {
+            body = [CCPhysicsBody bodyWithCircleOfRadius:cornerRadius andCenter:points[0]];
         }
         
         BOOL dynamic = [self readBool];
@@ -1061,7 +1077,16 @@
         float friction = [self readFloat];
         float elasticity = [self readFloat];
         
-        NSLog(@"CCBReader Physics shape:%d radius:%f dynamic:%d affectedByGravity:%d allowsRotation:%d density:%f friction:%f elasticity:%f", bodyShape, cornerRadius, dynamic, affectedByGravity, allowsRotation, density, friction, elasticity);
+        //body.affectedByGravity = affectedByGravity;
+        //body.allowsRotation = allowsRotation;
+        
+        body.density = density;
+        body.friction = friction;
+        body.elasticity = elasticity;
+        
+        NSLog(@"CCBReader physicsBody:%@", body);
+        
+        node.physicsBody = body;
     }
     
     // Read and add children
