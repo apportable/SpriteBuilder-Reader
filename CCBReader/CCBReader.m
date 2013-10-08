@@ -1073,6 +1073,9 @@
         BOOL affectedByGravity = [self readBool];
         BOOL allowsRotation = [self readBool];
         
+        if (dynamic) body.type = kCCPhysicsBodyTypeDynamic;
+        else body.type = kCCPhysicsBodyTypeStatic;
+        
         float density = [self readFloat];
         float friction = [self readFloat];
         float elasticity = [self readFloat];
@@ -1083,8 +1086,6 @@
         body.density = density;
         body.friction = friction;
         body.elasticity = elasticity;
-        
-        NSLog(@"CCBReader physicsBody:%@", body);
         
         node.physicsBody = body;
     }
