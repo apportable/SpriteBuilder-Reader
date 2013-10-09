@@ -31,7 +31,6 @@
 #import "CCBSequenceProperty.h"
 #import "CCBKeyframe.h"
 #import "CCBLocalizationManager.h"
-#import "CCPhysics.h"
 
 #ifdef CCB_ENABLE_UNZIP
 #import "SSZipArchive.h"
@@ -86,6 +85,7 @@
     [sharedFileUtils buildSearchResolutionsOrder];
     
     [sharedFileUtils loadFilenameLookupDictionaryFromFile:@"fileLookup.plist"];
+    [[CCSpriteFrameCache sharedSpriteFrameCache] loadSpriteFrameLookupDictionaryFromFile:@"spriteFrameFileList.plist"];
 }
 
 - (id) init
@@ -438,31 +438,11 @@
     }
     else if (type == kCCBPropTypeSpriteFrame)
     {
-        NSString* spriteSheet = [self readCachedString];
         NSString* spriteFile = [self readCachedString];
         
         if (setProp && ![spriteFile isEqualToString:@""])
         {
-            CCSpriteFrame* spriteFrame;
-            if ([spriteSheet isEqualToString:@""])
-            {
-                CCTexture2D* texture = [[CCTextureCache sharedTextureCache] addImage:spriteFile];
-                CGRect bounds = CGRectMake(0, 0, texture.contentSize.width, texture.contentSize.height);
-                spriteFrame = [CCSpriteFrame frameWithTexture:texture rect:bounds];
-            }
-            else
-            {
-                CCSpriteFrameCache* frameCache = [CCSpriteFrameCache sharedSpriteFrameCache];
-                
-                // Load the sprite sheet only if it is not loaded
-                if (![loadedSpriteSheets member:spriteSheet])
-                {
-                    [frameCache addSpriteFramesWithFile:spriteSheet];
-                    [loadedSpriteSheets addObject:spriteSheet];
-                }
-                
-                spriteFrame = [frameCache spriteFrameByName:spriteFile];
-            }
+            CCSpriteFrame* spriteFrame = [CCSpriteFrame frameWithImageNamed:spriteFile];
             [node setValue:spriteFrame forKey:name];
             
             if ([animatedProps containsObject:name])
@@ -852,29 +832,10 @@
     }
     else if (type == kCCBPropTypeSpriteFrame)
     {
-        NSString* spriteSheet = [self readCachedString];
         NSString* spriteFile = [self readCachedString];
         
-        CCSpriteFrame* spriteFrame;
-        if ([spriteSheet isEqualToString:@""])
-        {
-            CCTexture2D* texture = [[CCTextureCache sharedTextureCache] addImage:spriteFile];
-            CGRect bounds = CGRectMake(0, 0, texture.contentSize.width, texture.contentSize.height);
-            spriteFrame = [CCSpriteFrame frameWithTexture:texture rect:bounds];
-        }
-        else
-        {
-            CCSpriteFrameCache* frameCache = [CCSpriteFrameCache sharedSpriteFrameCache];
-                
-            // Load the sprite sheet only if it is not loaded
-            if (![loadedSpriteSheets member:spriteSheet])
-            {
-                [frameCache addSpriteFramesWithFile:spriteSheet];
-                [loadedSpriteSheets addObject:spriteSheet];
-            }
-            
-            spriteFrame = [frameCache spriteFrameByName:spriteFile];
-        }
+        CCSpriteFrame* spriteFrame = [CCSpriteFrame frameWithImageNamed:spriteFile];
+        
         value = spriteFrame;
     }
     

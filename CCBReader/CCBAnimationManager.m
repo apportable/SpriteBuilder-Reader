@@ -688,7 +688,7 @@ static NSInteger ccbAnimationManagerID = 0;
 
 -(void) update:(ccTime)time
 {
-	((CCSprite *)self.target).displayFrame = spriteFrame;
+	((CCSprite *)self.target).spriteFrame = spriteFrame;
 }
 
 @end
