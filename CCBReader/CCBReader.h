@@ -108,8 +108,6 @@ enum
 
 @interface CCBReader : NSObject
 {
-    BOOL jsControlled;
-    
     NSData* data;
     unsigned char* bytes;
     int currentByte;

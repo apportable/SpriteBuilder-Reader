@@ -49,21 +49,10 @@
     
     CCNode* __unsafe_unretained rootNode;
     id __unsafe_unretained owner;
-    BOOL jsControlled;
     CGSize rootContainerSize;
     
     NSObject<CCBAnimationManagerDelegate>* delegate;
     CCBSequence* runningSequence;
-    
-    // Used by javascript bindings
-    NSMutableArray* documentOutletNames;
-    NSMutableArray* documentOutletNodes;
-    NSMutableArray* documentCallbackNames;
-    NSMutableArray* documentCallbackNodes;
-    NSString* documentControllerName;
-    NSString* lastCompletedSequenceName;
-    NSMutableArray* keyframeCallbacks;
-    NSMutableDictionary* keyframeCallFuncs;
     
     void (^block)(id sender);
 }
@@ -71,20 +60,10 @@
 @property (nonatomic,assign) int autoPlaySequenceId;
 @property (nonatomic,unsafe_unretained) CCNode* rootNode;
 @property (nonatomic,unsafe_unretained) id owner;
-@property (nonatomic,assign) BOOL jsControlled;
 @property (nonatomic,assign) CGSize rootContainerSize;
 @property (nonatomic,strong) NSObject<CCBAnimationManagerDelegate>* delegate;
 @property (unsafe_unretained, nonatomic,readonly) NSString* runningSequenceName;
 @property (nonatomic,readonly) NSString* lastCompletedSequenceName;
-
-// For JS Callbacks
-@property (nonatomic,readonly) NSMutableArray* documentOutletNames;
-@property (nonatomic,readonly) NSMutableArray* documentOutletNodes;
-@property (nonatomic,readonly) NSMutableArray* documentCallbackNames;
-@property (nonatomic,readonly) NSMutableArray* documentCallbackNodes;
-@property (nonatomic,copy) NSString* documentControllerName;
-@property (nonatomic,readonly) NSMutableArray* keyframeCallbacks;
-- (void) setCallFunc:(CCCallBlockN *)callFunc forJSCallbackNamed:(NSString *)callbackNamed;
 
 - (CGSize) containerSize:(CCNode*)node;
 
@@ -121,8 +100,8 @@
     float dstAngle_;
     float diffAngle_;
 }
-+(id) actionWithDuration:(ccTime)duration angle:(float)angle;
--(id) initWithDuration:(ccTime)duration angle:(float)angle;
++(id) actionWithDuration:(CCTime)duration angle:(float)angle;
+-(id) initWithDuration:(CCTime)duration angle:(float)angle;
 @end
 
 @interface CCBRotateXTo : CCBRotateTo
@@ -145,6 +124,6 @@
 //
 // EeseInstant
 //
-@interface CCEaseInstant : CCActionEase <NSCopying>
+@interface CCActionEaseInstant : CCActionEase <NSCopying>
 {}
 @end

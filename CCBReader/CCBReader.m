@@ -65,13 +65,13 @@
     
     sharedFileUtils.directoriesDict =
     [[NSMutableDictionary alloc] initWithObjectsAndKeys:
-     @"resources-tablet", kCCFileUtilsiPad,
-     @"resources-tablethd", kCCFileUtilsiPadHD,
-     @"resources-phone", kCCFileUtilsiPhone,
-     @"resources-phonehd", kCCFileUtilsiPhoneHD,
-     @"resources-phone", kCCFileUtilsiPhone5,
-     @"resources-phonehd", kCCFileUtilsiPhone5HD,
-     @"", kCCFileUtilsDefault,
+     @"resources-tablet", CCFileUtilsSuffixiPad,
+     @"resources-tablethd", CCFileUtilsSuffixiPadHD,
+     @"resources-phone", CCFileUtilsSuffixiPhone,
+     @"resources-phonehd", CCFileUtilsSuffixiPhoneHD,
+     @"resources-phone", CCFileUtilsSuffixiPhone5,
+     @"resources-phonehd", CCFileUtilsSuffixiPhone5HD,
+     @"", CCFileUtilsSuffixDefault,
      nil];
     
     sharedFileUtils.searchPath =
@@ -81,7 +81,7 @@
      nil];
     
 	sharedFileUtils.enableiPhoneResourcesOniPad = YES;
-    sharedFileUtils.searchMode = kCCFileUtilsSearchDirectoryMode;
+    sharedFileUtils.searchMode = CCFileUtilsSearchModeDirectory;
     [sharedFileUtils buildSearchResolutionsOrder];
     
     [sharedFileUtils loadFilenameLookupDictionaryFromFile:@"fileLookup.plist"];
@@ -100,7 +100,7 @@
     loadedSpriteSheets = [[NSMutableSet alloc] init];
     
     // Setup resolution scale and default container size
-    actionManager.rootContainerSize = [[CCDirector sharedDirector] winSize];
+    actionManager.rootContainerSize = [[CCDirector sharedDirector] viewSize];
     
     return self;
 }
@@ -451,39 +451,13 @@
             }
         }
     }
-	else if(type == kCCBPropTypeAnimation)
-    {
-        NSString* animationFile = [self readCachedString];
-        NSString* animation = [self readCachedString];
-        
-        if (setProp)
-        {
-            CCAnimation* pAnimation = nil;
-            
-            // Support for stripping relative file paths, since ios doesn't currently
-            // know what to do with them, since its pulling from bundle.
-            // Eventually this should be handled by a client side asset manager
-            // interface which figured out what resources to load.
-			animation = [animation lastPathComponent];
-			animationFile = [animationFile lastPathComponent];
-			
-            if (![animation isEqualToString:@""])
-            {
-                CCAnimationCache* animationCache = [CCAnimationCache sharedAnimationCache];
-				[animationCache addAnimationsWithFile:animationFile];
-				
-                pAnimation = [animationCache	animationByName:animation];;
-            }
-            [node setValue:pAnimation forKey:name];
-        }
-    }
     else if (type == kCCBPropTypeTexture)
     {
         NSString* spriteFile = [self readCachedString];
         
         if (setProp && ![spriteFile isEqualToString:@""])
         {
-            CCTexture2D* texture = [[CCTextureCache sharedTextureCache] addImage:spriteFile];
+            CCTexture* texture = [CCTexture textureWithFile:spriteFile];
             [node setValue:texture forKey:name];
         }
     }
@@ -629,101 +603,41 @@
         
         if (setProp)
         {
-            if (!jsControlled)
+            // Objective C callbacks
+            if (selectorTarget)
             {
-                // Objective C callbacks
-                if (selectorTarget)
-                {
-                    id target = NULL;
-                    if (selectorTarget == kCCBTargetTypeDocumentRoot) target = actionManager.rootNode;
-                    else if (selectorTarget == kCCBTargetTypeOwner) target = owner;
-                    
-                    if (target)
-                    {
-                        SEL selector = NSSelectorFromString(selectorName);
-                        __unsafe_unretained id t = target;
-                        
-                        void (^block)(id sender);
-                        block = ^(id sender) {
-                            objc_msgSend(t, selector, sender);
-                        };
-                        
-                        NSString* setSelectorName = [NSString stringWithFormat:@"set%@:",[name capitalizedString]];
-                        SEL setSelector = NSSelectorFromString(setSelectorName);
-                        
-                        if ([node respondsToSelector:setSelector])
-                        {
-                            objc_msgSend(node, setSelector, block);
-                        }
-                        else
-                        {
-                            NSLog(@"CCBReader: Failed to set selector/target block for %@",selectorName);
-                        }
-                    }
-                    else
-                    {
-                        NSLog(@"CCBReader: Failed to find target for block");
-                    }
-                }
-            }
-            else
-            {
-                // JS Callbacks
-                if (selectorTarget)
-                {
-                    if (selectorTarget == kCCBTargetTypeDocumentRoot)
-                    {
-                        [actionManager.documentCallbackNames addObject:selectorName];
-                        [actionManager.documentCallbackNodes addObject:node];
-                    }
-                    else if (selectorTarget == kCCBTargetTypeOwner)
-                    {
-                        [ownerCallbackNames addObject:selectorName];
-                        [ownerCallbackNodes addObject:node];
-                    }
-                }
-            }
-        }
-    }
-    else if (type == kCCBPropTypeBlockCCControl)
-    {
-        NSString* selectorName = [self readCachedString];
-        int selectorTarget = [self readIntWithSign:NO];
-        int ctrlEvts = [self readIntWithSign:NO];
-        
-        NSLog(@"Old CCControl no longer supported: %@ %d %d", selectorName, selectorTarget, ctrlEvts);
-        
-        /*
-        if (setProp)
-        {
-            // Since we do not know for sure that CCControl is available, use
-            // NSInvocation to call it's addTarget:action:forControlEvents: method
-            NSMethodSignature* sig = [node methodSignatureForSelector:@selector(addTarget:action:forControlEvents:)];
-            if (sig)
-            {
-                SEL selector = NSSelectorFromString(selectorName);
                 id target = NULL;
                 if (selectorTarget == kCCBTargetTypeDocumentRoot) target = actionManager.rootNode;
                 else if (selectorTarget == kCCBTargetTypeOwner) target = owner;
                 
-                if (selector && target)
+                if (target)
                 {
-                    NSInvocation* invocation = [NSInvocation invocationWithMethodSignature:sig];
-                    [invocation setTarget:node];
-                    [invocation setSelector:@selector(addTarget:action:forControlEvents:)];
-                    [invocation setArgument:&target atIndex:2];
-                    [invocation setArgument:&selector atIndex:3];
-                    [invocation setArgument:&ctrlEvts atIndex:4];
+                    SEL selector = NSSelectorFromString(selectorName);
+                    __unsafe_unretained id t = target;
                     
-                    [invocation invoke];
+                    void (^block)(id sender);
+                    block = ^(id sender) {
+                        objc_msgSend(t, selector, sender);
+                    };
+                    
+                    NSString* setSelectorName = [NSString stringWithFormat:@"set%@:",[name capitalizedString]];
+                    SEL setSelector = NSSelectorFromString(setSelectorName);
+                    
+                    if ([node respondsToSelector:setSelector])
+                    {
+                        objc_msgSend(node, setSelector, block);
+                    }
+                    else
+                    {
+                        NSLog(@"CCBReader: Failed to set selector/target block for %@",selectorName);
+                    }
+                }
+                else
+                {
+                    NSLog(@"CCBReader: Failed to find target for block");
                 }
             }
-            else
-            {
-                NSLog(@"CCBReader: Failed to add selector/target block for CCControl");
-            }
         }
-         */
     }
     else if (type == kCCBPropTypeCCBFile)
     {
@@ -852,12 +766,6 @@
     // Read class
     NSString* className = [self readCachedString];
     
-    NSString* jsControllerName = NULL;
-    if (jsControlled)
-    {
-        jsControllerName = [self readCachedString];
-    }
-    
     // Read assignment type and name
     int memberVarAssignmentType = [self readIntWithSign:NO];
     NSString* memberVarAssignmentName = NULL;
@@ -876,12 +784,6 @@
     
     // Set root node
     if (!actionManager.rootNode) actionManager.rootNode = node;
-    
-    // Assign controller
-    if (jsControlled && actionManager.rootNode == node)
-    {
-        actionManager.documentControllerName = jsControllerName;
-    }
     
     // Read animated properties
     NSMutableDictionary* seqs = [NSMutableDictionary dictionary];
@@ -945,7 +847,7 @@
         //embeddedNode.anchorPoint = ccbFileNode.anchorPoint;
         embeddedNode.rotation = ccbFileNode.rotation;
         embeddedNode.scale = ccbFileNode.scale;
-        embeddedNode.tag = ccbFileNode.tag;
+        embeddedNode.name = ccbFileNode.name;
         embeddedNode.visible = YES;
         //embeddedNode.ignoreAnchorPointForPosition = ccbFileNode.ignoreAnchorPointForPosition;
         
@@ -957,42 +859,22 @@
     }
     
     // Assign to variable (if applicable)
-    if (!jsControlled)
+    if (memberVarAssignmentType)
     {
-        if (memberVarAssignmentType)
+        id target = NULL;
+        if (memberVarAssignmentType == kCCBTargetTypeDocumentRoot) target = actionManager.rootNode;
+        else if (memberVarAssignmentType == kCCBTargetTypeOwner) target = owner;
+        
+        if (target)
         {
-            id target = NULL;
-            if (memberVarAssignmentType == kCCBTargetTypeDocumentRoot) target = actionManager.rootNode;
-            else if (memberVarAssignmentType == kCCBTargetTypeOwner) target = owner;
-            
-            if (target)
+            Ivar ivar = class_getInstanceVariable([target class],[memberVarAssignmentName UTF8String]);
+            if (ivar)
             {
-                Ivar ivar = class_getInstanceVariable([target class],[memberVarAssignmentName UTF8String]);
-                if (ivar)
-                {
-                    object_setIvar(target,ivar,node);
-                }
-                else
-                {
-                    NSLog(@"CCBReader: Couldn't find member variable: %@", memberVarAssignmentName);
-                }
-            }
-        }
-    }
-    else
-    {
-        // Assign to arrays used by javascript bindings
-        if (memberVarAssignmentType)
-        {
-            if (memberVarAssignmentType == kCCBTargetTypeOwner)
-            {
-                [ownerOutletNames addObject:memberVarAssignmentName];
-                [ownerOutletNodes addObject:node];
+                object_setIvar(target,ivar,node);
             }
             else
             {
-                [actionManager.documentOutletNames addObject:memberVarAssignmentName];
-                [actionManager.documentOutletNodes addObject:node];
+                NSLog(@"CCBReader: Couldn't find member variable: %@", memberVarAssignmentName);
             }
         }
     }
@@ -1034,8 +916,8 @@
         BOOL affectedByGravity = [self readBool];
         BOOL allowsRotation = [self readBool];
         
-        if (dynamic) body.type = kCCPhysicsBodyTypeDynamic;
-        else body.type = kCCPhysicsBodyTypeStatic;
+        if (dynamic) body.type = CCPhysicsBodyTypeDynamic;
+        else body.type = CCPhysicsBodyTypeStatic;
         
         float density = [self readFloat];
         float friction = [self readFloat];
@@ -1044,7 +926,7 @@
         //body.affectedByGravity = affectedByGravity;
         //body.allowsRotation = allowsRotation;
         
-        body.density = density;
+        //body.density = density;
         body.friction = friction;
         body.elasticity = elasticity;
         
@@ -1084,12 +966,6 @@
         CCBKeyframe* keyframe = [[CCBKeyframe alloc] init];
         keyframe.time = time;
         keyframe.value = value;
-        
-        if (jsControlled)
-        {
-            NSString* callbackIdentifier = [NSString stringWithFormat:@"%d:%@", callbackType, callbackName];
-            [actionManager.keyframeCallbacks addObject:callbackIdentifier];
-        }
         
         [channel.keyframes addObject:keyframe];
     }
@@ -1190,9 +1066,8 @@
         return NO;
     }
     
-    // Read JS check
-    jsControlled = [self readBool];
-    self.actionManager.jsControlled = jsControlled;
+    // Read JS check (ignored)
+    [self readBool];
     
     return YES;
 }
@@ -1261,30 +1136,18 @@
     NSMutableDictionary* animationManagers = [NSMutableDictionary dictionary];
     CCNode* nodeGraph = [self readFileWithCleanUp:YES actionManagers:animationManagers];
     
-    if (nodeGraph && self.actionManager.autoPlaySequenceId != -1 && !jsControlled)
+    if (nodeGraph && self.actionManager.autoPlaySequenceId != -1)
     {
         // Auto play animations
         [self.actionManager runAnimationsForSequenceId:self.actionManager.autoPlaySequenceId tweenDuration:0];
     }
     
-    // Assign actionManagers to userObject
-    if (jsControlled)
-    {
-        nodesWithAnimationManagers = [[NSMutableArray alloc] init];
-        animationManagersForNodes = [[NSMutableArray alloc] init];
-    }
     for (NSValue* pointerValue in animationManagers)
     {
         CCNode* node = [pointerValue pointerValue];
         
         CCBAnimationManager* manager = [animationManagers objectForKey:pointerValue];
         node.userObject = manager;
-        
-        if (jsControlled)
-        {
-            [nodesWithAnimationManagers addObject:node];
-            [animationManagersForNodes addObject:manager];
-        }
     }
     
     // Call didLoadFromCCB
@@ -1306,12 +1169,12 @@
 
 - (CCNode*) nodeGraphFromFile:(NSString*) file owner:(id)o
 {
-    return [self nodeGraphFromFile:file owner:o parentSize:[[CCDirector sharedDirector] winSize]];
+    return [self nodeGraphFromFile:file owner:o parentSize:[[CCDirector sharedDirector] viewSize]];
 }
 
 - (CCNode*) nodeGraphFromFile:(NSString*) file
 {
-    return [self nodeGraphFromFile:file owner:NULL parentSize:[[CCDirector sharedDirector] winSize]];
+    return [self nodeGraphFromFile:file owner:NULL parentSize:[[CCDirector sharedDirector] viewSize]];
 }
 
 +(void) setResourcePath:(NSString *)searchPath
@@ -1328,7 +1191,7 @@
 
 + (CCNode*) nodeGraphFromFile:(NSString*) file owner:(id)owner
 {
-    return [CCBReader nodeGraphFromFile:file owner:owner parentSize:[[CCDirector sharedDirector] winSize]];
+    return [CCBReader nodeGraphFromFile:file owner:owner parentSize:[[CCDirector sharedDirector] viewSize]];
 }
 
 + (CCNode*) nodeGraphFromData:(NSData*) data owner:(id)owner parentSize:(CGSize)parentSize
@@ -1348,7 +1211,7 @@
 
 + (CCScene*) sceneWithNodeGraphFromFile:(NSString *)file owner:(id)owner
 {
-    return [CCBReader sceneWithNodeGraphFromFile:file owner:owner parentSize:[[CCDirector sharedDirector] winSize]];
+    return [CCBReader sceneWithNodeGraphFromFile:file owner:owner parentSize:[[CCDirector sharedDirector] viewSize]];
 }
 
 + (CCScene*) sceneWithNodeGraphFromFile:(NSString *)file owner:(id)owner parentSize:(CGSize)parentSize

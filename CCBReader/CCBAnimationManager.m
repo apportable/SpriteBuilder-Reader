@@ -31,6 +31,8 @@
 //#import "SimpleAudioEngine.h"
 #import <objc/runtime.h>
 
+#import "CCDirector_Private.h"
+
 #warning FIX Sounds
 
 static NSInteger ccbAnimationManagerID = 0;
@@ -42,14 +44,7 @@ static NSInteger ccbAnimationManagerID = 0;
 @synthesize rootNode;
 @synthesize rootContainerSize;
 @synthesize owner;
-@synthesize jsControlled;
 @synthesize delegate;
-@synthesize documentOutletNames;
-@synthesize documentOutletNodes;
-@synthesize documentCallbackNames;
-@synthesize documentCallbackNodes;
-@synthesize documentControllerName;
-@synthesize keyframeCallbacks;
 @synthesize lastCompletedSequenceName;
 
 - (id) init
@@ -63,14 +58,6 @@ static NSInteger ccbAnimationManagerID = 0;
     sequences = [[NSMutableArray alloc] init];
     nodeSequences = [[NSMutableDictionary alloc] init];
     baseValues = [[NSMutableDictionary alloc] init];
-    
-    documentOutletNames = [[NSMutableArray alloc] init];
-    documentOutletNodes = [[NSMutableArray alloc] init];
-    documentCallbackNames = [[NSMutableArray alloc] init];
-    documentCallbackNodes = [[NSMutableArray alloc] init];
-    
-    keyframeCallbacks = [[NSMutableArray alloc] init];
-    keyframeCallFuncs = [[NSMutableDictionary alloc] init];
     
     return self;
 }
@@ -170,29 +157,29 @@ static NSInteger ccbAnimationManagerID = 0;
     }
     else if ([name isEqualToString:@"opacity"])
     {
-        return [CCFadeTo actionWithDuration:duration opacity:[kf1.value intValue]];
+        return [CCActionFadeTo actionWithDuration:duration opacity:[kf1.value intValue]];
     }
     else if ([name isEqualToString:@"color"])
     {
         ccColor3B c;
         [kf1.value getValue:&c];
         
-        return [CCTintTo actionWithDuration:duration red:c.r green:c.g blue:c.b];
+        return [CCActionTintTo actionWithDuration:duration red:c.r green:c.g blue:c.b];
     }
     else if ([name isEqualToString:@"visible"])
     {
         if ([kf1.value boolValue])
         {
-            return [CCSequence actionOne:[CCDelayTime actionWithDuration:duration] two:[CCShow action]];
+            return [CCActionSequence actionOne:[CCActionDelay actionWithDuration:duration] two:[CCActionShow action]];
         }
         else
         {
-            return [CCSequence actionOne:[CCDelayTime actionWithDuration:duration] two:[CCHide action]];
+            return [CCActionSequence actionOne:[CCActionDelay actionWithDuration:duration] two:[CCActionHide action]];
         }
     }
     else if ([name isEqualToString:@"displayFrame"])
     {
-        return [CCSequence actionOne:[CCDelayTime actionWithDuration:duration] two:[CCBSetSpriteFrame actionWithSpriteFrame:kf1.value]];
+        return [CCActionSequence actionOne:[CCActionDelay actionWithDuration:duration] two:[CCBSetSpriteFrame actionWithSpriteFrame:kf1.value]];
     }
     else if ([name isEqualToString:@"position"])
     {
@@ -209,7 +196,7 @@ static NSInteger ccbAnimationManagerID = 0;
         
         //CGPoint absPos = [node absolutePositionFromRelative:ccp(x,y) type:type parentSize:containerSize propertyName:name];
         
-        return [CCMoveTo actionWithDuration:duration position:ccp(x,y)];
+        return [CCActionMoveTo actionWithDuration:duration position:ccp(x,y)];
     }
     else if ([name isEqualToString:@"scale"])
     {
@@ -230,7 +217,7 @@ static NSInteger ccbAnimationManagerID = 0;
             y *= resolutionScale;
         }*/
         
-        return [CCScaleTo actionWithDuration:duration scaleX:x scaleY:y];
+        return [CCActionScaleTo actionWithDuration:duration scaleX:x scaleY:y];
     }
     else if ([name isEqualToString:@"skew"])
     {
@@ -239,7 +226,7 @@ static NSInteger ccbAnimationManagerID = 0;
         float x = [[value objectAtIndex:0] floatValue];
         float y = [[value objectAtIndex:1] floatValue];
         
-        return [CCSkewTo actionWithDuration:duration skewX:x skewY:y];
+        return [CCActionSkewTo actionWithDuration:duration skewX:x skewY:y];
     }
     else
     {
@@ -326,7 +313,7 @@ static NSInteger ccbAnimationManagerID = 0;
 
 - (CCActionInterval*) easeAction:(CCActionInterval*) action easingType:(int)easingType easingOpt:(float) easingOpt
 {
-    if ([action isKindOfClass:[CCSequence class]]) return action;
+    if ([action isKindOfClass:[CCActionSequence class]]) return action;
     
     if (easingType == kCCBKeyframeEasingLinear)
     {
@@ -334,55 +321,55 @@ static NSInteger ccbAnimationManagerID = 0;
     }
     else if (easingType == kCCBKeyframeEasingInstant)
     {
-        return [CCEaseInstant actionWithAction:action];
+        return [CCActionEaseInstant actionWithAction:action];
     }
     else if (easingType == kCCBKeyframeEasingCubicIn)
     {
-        return [CCEaseIn actionWithAction:action rate:easingOpt];
+        return [CCActionEaseIn actionWithAction:action rate:easingOpt];
     }
     else if (easingType == kCCBKeyframeEasingCubicOut)
     {
-        return [CCEaseOut actionWithAction:action rate:easingOpt];
+        return [CCActionEaseOut actionWithAction:action rate:easingOpt];
     }
     else if (easingType == kCCBKeyframeEasingCubicInOut)
     {
-        return [CCEaseInOut actionWithAction:action rate:easingOpt];
+        return [CCActionEaseInOut actionWithAction:action rate:easingOpt];
     }
     else if (easingType == kCCBKeyframeEasingBackIn)
     {
-        return [CCEaseBackIn actionWithAction:action];
+        return [CCActionEaseBackIn actionWithAction:action];
     }
     else if (easingType == kCCBKeyframeEasingBackOut)
     {
-        return [CCEaseBackOut actionWithAction:action];
+        return [CCActionEaseBackOut actionWithAction:action];
     }
     else if (easingType == kCCBKeyframeEasingBackInOut)
     {
-        return [CCEaseBackInOut actionWithAction:action];
+        return [CCActionEaseBackInOut actionWithAction:action];
     }
     else if (easingType == kCCBKeyframeEasingBounceIn)
     {
-        return [CCEaseBounceIn actionWithAction:action];
+        return [CCActionEaseBounceIn actionWithAction:action];
     }
     else if (easingType == kCCBKeyframeEasingBounceOut)
     {
-        return [CCEaseBounceOut actionWithAction:action];
+        return [CCActionEaseBounceOut actionWithAction:action];
     }
     else if (easingType == kCCBKeyframeEasingBounceInOut)
     {
-        return [CCEaseBounceInOut actionWithAction:action];
+        return [CCActionEaseBounceInOut actionWithAction:action];
     }
     else if (easingType == kCCBKeyframeEasingElasticIn)
     {
-        return [CCEaseElasticIn actionWithAction:action period:easingOpt];
+        return [CCActionEaseElasticIn actionWithAction:action period:easingOpt];
     }
     else if (easingType == kCCBKeyframeEasingElasticOut)
     {
-        return [CCEaseElasticOut actionWithAction:action period:easingOpt];
+        return [CCActionEaseElasticOut actionWithAction:action period:easingOpt];
     }
     else if (easingType == kCCBKeyframeEasingElasticInOut)
     {
-        return [CCEaseElasticInOut actionWithAction:action period:easingOpt];
+        return [CCActionEaseElasticInOut actionWithAction:action period:easingOpt];
     }
     else
     {
@@ -393,7 +380,7 @@ static NSInteger ccbAnimationManagerID = 0;
 
 - (void) removeActionsByTag:(NSInteger)tag fromNode:(CCNode*)node
 {
-    CCActionManager* am = node.actionManager;
+    CCActionManager* am = [[CCDirector sharedDirector] actionManager];
     
     while ([am getActionByTag:tag target:node])
     {
@@ -416,7 +403,7 @@ static NSInteger ccbAnimationManagerID = 0;
         
         if (timeFirst > 0)
         {
-            [actions addObject:[CCDelayTime actionWithDuration:timeFirst]];
+            [actions addObject:[CCActionDelay actionWithDuration:timeFirst]];
         }
         
         for (int i = 0; i < numKeyframes - 1; i++)
@@ -434,7 +421,7 @@ static NSInteger ccbAnimationManagerID = 0;
             }
         }
         
-        CCSequence* seq = [CCSequence actionWithArray:actions];
+        CCActionSequence* seq = [CCActionSequence actionWithArray:actions];
         seq.tag = animationManagerId;
         [node runAction:seq];
     }
@@ -452,42 +439,28 @@ static NSInteger ccbAnimationManagerID = 0;
         lastKeyframeTime = keyframe.time;
         if (timeSinceLastKeyframe > 0)
         {
-            [actions addObject:[CCDelayTime actionWithDuration:timeSinceLastKeyframe]];
+            [actions addObject:[CCActionDelay actionWithDuration:timeSinceLastKeyframe]];
         }
         
         NSString* selectorName = [keyframe.value objectAtIndex:0];
         int selectorTarget = [[keyframe.value objectAtIndex:1] intValue];
         
-        if (jsControlled)
+        // Callback through obj-c
+        id target = NULL;
+        if (selectorTarget == kCCBTargetTypeDocumentRoot) target = self.rootNode;
+        else if (selectorTarget == kCCBTargetTypeOwner) target = owner;
+        
+        SEL selector = NSSelectorFromString(selectorName);
+        
+        if (target && selector)
         {
-            // Handle JS controlled timelines
-            NSString* callbackName = [NSString stringWithFormat:@"%d:%@", selectorTarget, selectorName];
-            CCCallBlockN* callback = [[keyframeCallFuncs objectForKey:callbackName] copy];
-            
-            if (callback)
-            {
-                [actions addObject:callback];
-            }
-        }
-        else
-        {
-            // Callback through obj-c
-            id target = NULL;
-            if (selectorTarget == kCCBTargetTypeDocumentRoot) target = self.rootNode;
-            else if (selectorTarget == kCCBTargetTypeOwner) target = owner;
-            
-            SEL selector = NSSelectorFromString(selectorName);
-            
-            if (target && selector)
-            {
-                [actions addObject:[CCCallFunc actionWithTarget:target selector:selector]];
-            }
+            [actions addObject:[CCActionCallFunc actionWithTarget:target selector:selector]];
         }
     }
     
     if (!actions.count) return NULL;
     
-    return [CCSequence actionWithArray:actions];
+    return [CCActionSequence actionWithArray:actions];
 }
 
 - (id) actionForSoundChannel:(CCBSequenceProperty*) channel
@@ -502,7 +475,7 @@ static NSInteger ccbAnimationManagerID = 0;
         lastKeyframeTime = keyframe.time;
         if (timeSinceLastKeyframe > 0)
         {
-            [actions addObject:[CCDelayTime actionWithDuration:timeSinceLastKeyframe]];
+            [actions addObject:[CCActionDelay actionWithDuration:timeSinceLastKeyframe]];
         }
         
         NSString* soundFile = [keyframe.value objectAtIndex:0];
@@ -515,7 +488,7 @@ static NSInteger ccbAnimationManagerID = 0;
     
     if (!actions.count) return NULL;
     
-    return [CCSequence actionWithArray:actions];
+    return [CCActionSequence actionWithArray:actions];
 }
 
 - (void) runAnimationsForSequenceId:(int)seqId tweenDuration:(float) tweenDuration
@@ -565,7 +538,7 @@ static NSInteger ccbAnimationManagerID = 0;
     
     // Make callback at end of sequence
     CCBSequence* seq = [self sequenceFromSequenceId:seqId];
-    CCAction* completeAction = [CCSequence actionOne:[CCDelayTime actionWithDuration:seq.duration+tweenDuration] two:[CCCallFunc actionWithTarget:self selector:@selector(sequenceCompleted)]];
+    CCAction* completeAction = [CCActionSequence actionOne:[CCActionDelay actionWithDuration:seq.duration+tweenDuration] two:[CCActionCallFunc actionWithTarget:self selector:@selector(sequenceCompleted)]];
     completeAction.tag = animationManagerId;
     [rootNode runAction:completeAction];
     
@@ -640,10 +613,12 @@ static NSInteger ccbAnimationManagerID = 0;
     block = [b copy];
 }
 
+/*
 - (void) setCallFunc:(CCCallBlockN *)callFunc forJSCallbackNamed:(NSString *)callbackNamed
 {
     [keyframeCallFuncs setObject:callFunc forKey:callbackNamed];
 }
+ */
 
 - (void) dealloc
 {
@@ -686,7 +661,7 @@ static NSInteger ccbAnimationManagerID = 0;
 	return copy;
 }
 
--(void) update:(ccTime)time
+-(void) update:(CCTime)time
 {
 	((CCSprite *)self.target).spriteFrame = spriteFrame;
 }
@@ -696,12 +671,12 @@ static NSInteger ccbAnimationManagerID = 0;
 
 @implementation CCBRotateTo
 
-+(id) actionWithDuration:(ccTime)duration angle:(float)angle
++(id) actionWithDuration:(CCTime)duration angle:(float)angle
 {
     return [[self alloc] initWithDuration:duration angle:angle];
 }
 
--(id) initWithDuration:(ccTime)duration angle:(float)angle
+-(id) initWithDuration:(CCTime)duration angle:(float)angle
 {
     self = [super initWithDuration:duration];
     if (!self) return NULL;
@@ -724,7 +699,7 @@ static NSInteger ccbAnimationManagerID = 0;
     diffAngle_ = dstAngle_ - startAngle_;
 }
 
--(void) update: (ccTime) t
+-(void) update: (CCTime) t
 {
 	[self.target setRotation: startAngle_ + diffAngle_ * t];
 }
@@ -745,7 +720,7 @@ static NSInteger ccbAnimationManagerID = 0;
     diffAngle_ = dstAngle_ - startAngle_;
 }
 
--(void) update: (ccTime) t
+-(void) update: (CCTime) t
 {
 	[self.target setRotationalSkewX: startAngle_ + diffAngle_ * t];
 }
@@ -766,7 +741,7 @@ static NSInteger ccbAnimationManagerID = 0;
     diffAngle_ = dstAngle_ - startAngle_;
 }
 
--(void) update: (ccTime) t
+-(void) update: (CCTime) t
 {
 	[self.target setRotationalSkewY: startAngle_ + diffAngle_ * t];
 }
@@ -795,7 +770,7 @@ static NSInteger ccbAnimationManagerID = 0;
 }
 
 
-- (void) update:(ccTime)time
+- (void) update:(CCTime)time
 {
 #warning FIX Sounds
     //[[SimpleAudioEngine sharedEngine] playEffect:soundFile pitch:pitch pan:pan gain:gain];
@@ -803,8 +778,8 @@ static NSInteger ccbAnimationManagerID = 0;
 
 @end
 
-@implementation CCEaseInstant
--(void) update: (ccTime) t
+@implementation CCActionEaseInstant
+-(void) update: (CCTime) t
 {
     if (t < 0)
     {
