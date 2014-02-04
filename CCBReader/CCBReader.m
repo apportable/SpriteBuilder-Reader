@@ -31,6 +31,7 @@
 #import "CCBSequenceProperty.h"
 #import "CCBKeyframe.h"
 #import "CCBLocalizationManager.h"
+#import "CCBScene.h"
 
 #ifdef CCB_ENABLE_UNZIP
 #import "SSZipArchive.h"
@@ -1217,7 +1218,8 @@
 + (CCScene*) sceneWithNodeGraphFromFile:(NSString *)file owner:(id)owner parentSize:(CGSize)parentSize
 {
     CCNode* node = [CCBReader nodeGraphFromFile:file owner:owner parentSize:parentSize];
-    CCScene* scene = [CCScene node];
+    CCBScene* scene = [CCBScene node];
+    scene.customClass = node;
     [scene addChild:node];
     return scene;
 }
